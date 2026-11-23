@@ -43,7 +43,7 @@ const SORT_OPTIONS = [
 
 function filterAndSortProperties(properties: Property[], filters: PropertyFilters): Property[] {
   // Public marketplace strictly exposes ONLY published inventory
-  let result = [...properties].filter((p) => p.status === "published" || p.status === "active");
+  let result = [...properties].filter((p) => p.status === "published");
 
   if (filters.query) {
     const q = filters.query.toLowerCase();
@@ -115,7 +115,7 @@ export default function PropertiesClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState(filters.query || "");
 
-  const totalPublished = properties.filter((p) => p.status === "published" || p.status === "active").length;
+  const totalPublished = properties.filter((p) => p.status === "published").length;
   const filteredProperties = filterAndSortProperties(properties, filters);
 
   const whatsappUrl = getWhatsAppUrl(

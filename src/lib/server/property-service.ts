@@ -100,7 +100,7 @@ export class PropertyService {
     // Server-side database fallback
     let list = readLocalProperties();
     if (options?.onlyPublished) {
-      list = list.filter((p) => p.status === "published" || p.status === "active");
+      list = list.filter((p) => p.status === "published");
     }
     if (options?.category) {
       list = list.filter((p) => p.category === options.category);
@@ -285,6 +285,7 @@ export class PropertyService {
           timestamp: now,
         },
       ],
+      customer_id: input.customer_id,
       seller_name: input.seller_name,
       seller_mobile: input.seller_mobile,
       seller_email: input.seller_email,
@@ -357,7 +358,7 @@ export class PropertyService {
         if (propErr) throw propErr;
 
         // 2. Insert images
-        if (newProperty.images.length > 0) {
+        if (newProperty.images && newProperty.images.length > 0) {
           await supabase.from("property_images").insert(
             newProperty.images.map((img) => ({
               id: img.id,
@@ -371,7 +372,7 @@ export class PropertyService {
         }
 
         // 3. Insert documents
-        if (newProperty.documents.length > 0) {
+        if (newProperty.documents && newProperty.documents.length > 0) {
           await supabase.from("property_documents").insert(
             newProperty.documents.map((doc) => ({
               id: doc.id,

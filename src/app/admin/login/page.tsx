@@ -3,28 +3,32 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/lib/admin-auth";
-import { Building2, Lock, Mail, Loader2, ArrowRight } from "lucide-react";
+import { Building2, Lock, UserCheck, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { login } = useAdminAuth();
-  const [email, setEmail] = useState("acreindiaclub@gmail.com");
-  const [password, setPassword] = useState("Admin@LandParcel2026");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!identifier.trim() || !password) {
+      toast.error("Please enter your authorized mobile number or email and password.");
+      return;
+    }
 
+    setLoading(true);
     try {
-      const ok = await login(email, password);
-      if (ok) {
-        toast.success("Welcome to Land Parcel Admin Portal");
+      const result = await login(identifier.trim(), password);
+      if (result.ok) {
+        toast.success(`Welcome, ${result.user?.name || "Super Admin"}!`);
         router.push("/admin");
       } else {
-        toast.error("Invalid administrator credentials");
+        toast.error(result.error || "Invalid administrator credentials");
         setLoading(false);
       }
     } catch {
@@ -44,47 +48,48 @@ export default function AdminLoginPage() {
             LAND <span className="text-[#C6A66B]">PARCEL</span>
           </h1>
           <p className="text-xs text-[#64748B] uppercase tracking-widest mt-1 font-semibold">
-            Administrative Control Panel
+            Super Admin Command Center
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label-field">Admin Email</label>
+            <label className="label-field">Super Admin Mobile Number or Email</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <UserCheck className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="input-field pl-10 text-sm"
-                placeholder="admin@landparcel.in"
+                placeholder="Authorized mobile number or email"
               />
             </div>
           </div>
 
           <div>
-            <label className="label-field">Password</label>
+            <label className="label-field">Administrator Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field pl-10 text-sm"
-                placeholder="••••••••••••"
+                placeholder="Enter your secure admin password"
               />
             </div>
           </div>
 
-          <div className="p-3 bg-[#EAF3FA] rounded-xl text-xs text-[#172B4D] leading-relaxed">
-            <strong>Official Admin Credentials Pre-filled:</strong>
-            <br />
-            Email: <code className="font-mono">acreindiaclub@gmail.com</code> (Suraj Prakash)
-            <br />
-            Password: <code className="font-mono">Admin@LandParcel2026</code>
+          <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[11px] text-[#64748B] flex items-start gap-2 leading-relaxed">
+            <ShieldCheck className="w-4 h-4 text-[#172B4D] flex-shrink-0 mt-0.5" />
+            <span>
+              Server-verified authentication required. Access is strictly restricted to authorized Super Admin and delegated Admin accounts.
+            </span>
           </div>
 
           <button
@@ -94,22 +99,22 @@ export default function AdminLoginPage() {
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Authenticating...
+                <Loader2 className="w-4 h-4 animate-spin" /> Verifying Super Admin...
               </>
             ) : (
               <>
-                Sign In to Dashboard <ArrowRight className="w-4 h-4" />
+                Sign In to Admin Dashboard <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
-        <div className="text-center mt-6">
-          <Link
-            href="/"
-            className="text-xs text-[#64748B] hover:text-[#172B4D] transition-colors"
-          >
-            ← Return to Public Website
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#E2E8F0] text-xs">
+          <Link href="/" className="text-[#64748B] hover:text-[#172B4D] transition-colors">
+            ← Public Website
+          </Link>
+          <Link href="/login" className="text-[#172B4D] font-semibold hover:underline">
+            Customer OTP Login →
           </Link>
         </div>
       </div>

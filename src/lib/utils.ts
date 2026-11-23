@@ -114,7 +114,9 @@ export function getSourceLabel(source: PropertySource | string): string {
   const labels: Record<string, string> = {
     admin: "Admin Added",
     owner: "Owner Submitted",
+    dealer: "Dealer Submitted",
     agent: "Agent Submitted",
+    builder: "Builder Submitted",
     developer: "Developer Submitted",
   };
   return labels[source] || source;
@@ -124,7 +126,9 @@ export function getSourceColor(source: PropertySource | string): string {
   const colors: Record<string, string> = {
     admin: "bg-blue-50 text-blue-700 border-blue-200",
     owner: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dealer: "bg-indigo-50 text-indigo-700 border-indigo-200",
     agent: "bg-purple-50 text-purple-700 border-purple-200",
+    builder: "bg-orange-50 text-orange-700 border-orange-200",
     developer: "bg-amber-50 text-amber-700 border-amber-200",
   };
   return colors[source] || "bg-gray-50 text-gray-700 border-gray-200";

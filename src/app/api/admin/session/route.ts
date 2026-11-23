@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminSessionFromRequest, OFFICIAL_ADMIN } from "@/lib/server/admin-auth";
+import { getAdminSessionFromRequest } from "@/lib/server/admin-auth";
 
 export async function GET(request: NextRequest) {
   const session = getAdminSessionFromRequest(request);
@@ -14,9 +14,12 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     authenticated: true,
     user: {
+      userId: session.userId,
+      name: session.name,
+      mobile: session.mobile,
       email: session.email,
-      name: OFFICIAL_ADMIN.name,
-      role: "admin",
+      role: session.role,
+      accountType: session.accountType,
       expiresAt: session.expiresAt,
     },
   });

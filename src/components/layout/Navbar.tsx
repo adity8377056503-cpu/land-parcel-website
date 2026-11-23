@@ -152,13 +152,20 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <div className="pt-3 border-t border-[#E2E8F0] flex gap-3">
+            <div className="pt-3 border-t border-[#E2E8F0] flex gap-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setIsMenuOpen(false)}
+                className="btn-secondary text-sm py-2.5 px-4 flex-1 text-center"
+              >
+                Customer Dashboard
+              </Link>
               <Link
                 href="/list-property"
                 onClick={() => setIsMenuOpen(false)}
-                className="btn-primary text-sm py-2.5 px-5 flex-1 text-center"
+                className="btn-primary text-sm py-2.5 px-4 flex-1 text-center"
               >
-                List Your Property
+                List Property
               </Link>
             </div>
           </div>

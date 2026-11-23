@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PropertyService } from "@/lib/server/property-service";
 import { getAdminSessionFromRequest } from "@/lib/server/admin-auth";
+import { PlatformService } from "@/lib/server/platform-service";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -45,12 +46,40 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    const existing = await PropertyService.getPropertyByIdOrSlug(id, true);
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Property record not found" },
+        { status: 404 }
+      );
+    }
+
     const updates = await request.json();
+
+    // Credit consumption rule: deduct 1 credit ONLY when a customer's listing transitions to 'published'
+    // Admin-owned properties (source === 'admin') are permanently FREE & unlimited.
+    const isApprovingCustomerListing =
+      existing.source !== "admin" &&
+      existing.status !== "published" &&
+      updates.status === "published" &&
+      !existing.published_at;
+
+    let creditNotice = "";
+    if (isApprovingCustomerListing) {
+      const targetKey = existing.customer_id || existing.seller_mobile;
+      if (targetKey) {
+        const creditResult = await PlatformService.consumeCreditOnPublish(targetKey);
+        if (creditResult.consumed) {
+          creditNotice = ` (1 ${creditResult.creditType} listing credit deducted)`;
+        }
+      }
+    }
+
     const updated = await PropertyService.updateProperty(
       id,
       updates,
-      session.email,
-      updates.statusNotes || "Admin edited property"
+      `${session.name} (${session.role})`,
+      (updates.statusNotes || "Admin updated property") + creditNotice
     );
 
     if (!updated) {
@@ -62,7 +91,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      message: `Property ${updated.listing_id} updated successfully`,
+      message: `Property ${updated.listing_id} updated successfully${creditNotice}`,
       property: updated,
     });
   } catch (err: any) {

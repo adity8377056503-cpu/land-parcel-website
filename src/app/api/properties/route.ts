@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PropertyService } from "@/lib/server/property-service";
 import { getAdminSessionFromRequest } from "@/lib/server/admin-auth";
+import { getCustomerSessionFromRequest, normalizeIndianMobile } from "@/lib/server/customer-auth";
+import { PlatformService } from "@/lib/server/platform-service";
 
 const propertySubmissionSchema = z.object({
   // Contact (optional if admin)
   seller_name: z.string().optional(),
   seller_mobile: z.string().optional(),
   seller_email: z.string().optional(),
-  seller_type: z.enum(["owner", "agent", "developer"]).optional(),
+  seller_type: z.enum(["owner", "dealer", "agent", "builder", "developer"]).optional(),
 
   // Property
   title: z.string().min(3),
@@ -40,22 +42,22 @@ const propertySubmissionSchema = z.object({
   highlights: z.array(z.string()).optional(),
 
   // Origin & Status
-  source: z.enum(["admin", "owner", "agent", "developer"]).optional(),
+  source: z.enum(["admin", "owner", "dealer", "agent", "builder", "developer"]).optional(),
   status: z.enum(["draft", "pending", "published", "rejected", "sold", "rented", "unpublished"]).optional(),
   is_featured: z.boolean().optional(),
   video_url: z.string().optional(),
   images: z.array(z.any()).optional(),
   documents: z.array(z.any()).optional(),
 
-  // Consent (for public submissions)
+  // Consent (for customer submissions)
   consent: z.boolean().optional(),
   authorization_confirmed: z.boolean().optional(),
 });
 
 /**
  * GET /api/properties
- * Public users: returns only published inventory.
- * Admin: returns full inventory across all lifecycle statuses.
+ * Public users: returns only published inventory (private documents stripped).
+ * Verified Admin / Super Admin: returns full inventory across all lifecycle statuses.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -79,6 +81,10 @@ export async function GET(request: NextRequest) {
       properties = properties.filter((p) => p.status === status);
     }
 
+    if (!isAdmin) {
+      properties = properties.map((p) => ({ ...p, documents: [] }));
+    }
+
     return NextResponse.json({
       success: true,
       count: properties.length,
@@ -95,9 +101,8 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/properties
- * Creates a new property listing.
- * Admin uploads: Permanent unlimited quota, status draft or published.
- * Public uploads: Enforces 5 lifetime free credits and moves to pending review.
+ * - Super Admin / Admin: Permanent unlimited free uploads; can publish immediately or save draft.
+ * - Customers: Server-enforced 5 lifetime free credits + active verified subscription credits; always enters Pending Review.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -112,86 +117,86 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
-    const session = getAdminSessionFromRequest(request);
-    const isAdmin = Boolean(session);
-    const requestedSource = data.source || (isAdmin ? "admin" : "owner");
+    const adminSession = getAdminSessionFromRequest(request);
+    const customerSession = getCustomerSessionFromRequest(request);
+    const isAdmin = Boolean(adminSession);
+    const requestedSource = data.source || (isAdmin ? "admin" : data.seller_type || "owner");
     const isPublic = requestedSource !== "admin";
 
-    // 1. Guard admin source against unauthorized spoofing
+    // 1. Guard admin source against spoofing
     if (!isAdmin && requestedSource === "admin") {
       return NextResponse.json(
-        { error: "Unauthorized. Admin session required to publish admin listings." },
+        { error: "Unauthorized. Verified Super Admin session required for admin listings." },
         { status: 401 }
       );
     }
 
-    // 2. Public submissions require consent and declaration
+    // 2. Customer submissions require consent and ownership/authorization declaration
     if (isPublic && (!data.consent || !data.authorization_confirmed)) {
       return NextResponse.json(
-        { error: "Consent and legal authorization confirmation are required for public listings." },
+        { error: "Consent and legal authorization confirmation are required for customer listings." },
         { status: 400 }
       );
     }
 
-    // 3. Server-side quota check for public submissions (5 lifetime free listings)
+    let linkedCustomerId: string | undefined;
+    let sellerName = data.seller_name;
+    let sellerMobile = data.seller_mobile;
+    let sellerEmail = data.seller_email;
+    let sellerType = data.seller_type;
+
+    // 3. Server-side quota & subscription enforcement for customers (Admin is permanently exempt)
     if (isPublic) {
-      if (!data.seller_mobile) {
-        return NextResponse.json(
-          { error: "A valid mobile number is required to verify listing quota eligibility." },
-          { status: 400 }
-        );
+      let customer = customerSession
+        ? await PlatformService.getCustomerById(customerSession.customerId)
+        : null;
+
+      if (!customer && data.seller_mobile) {
+        customer = await PlatformService.getCustomerByMobile(data.seller_mobile);
       }
 
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-      if (
-        supabaseUrl &&
-        serviceRoleKey &&
-        !supabaseUrl.includes("placeholder") &&
-        !serviceRoleKey.includes("placeholder")
-      ) {
-        try {
-          const { createAdminClient } = await import("@/lib/supabase/server");
-          const supabase = await createAdminClient();
-
-          const normalizedMobile = data.seller_mobile.replace(/\D/g, "").slice(-10);
-
-          const { data: client } = await supabase
-            .from("client_accounts")
-            .select("free_credits_total, free_credits_used, subscription_status, current_period_end")
-            .eq("mobile", normalizedMobile)
-            .maybeSingle();
-
-          if (client) {
-            const hasActiveSubscription =
-              client.subscription_status === "active" &&
-              (!client.current_period_end || new Date(client.current_period_end) > new Date());
-
-            if (!hasActiveSubscription && client.free_credits_used >= (client.free_credits_total || 5)) {
-              return NextResponse.json(
-                {
-                  error:
-                    "Free listing quota (5 properties) has been exhausted. An active monthly subscription is required to submit additional properties.",
-                  code: "SUBSCRIPTION_REQUIRED",
-                  free_credits_used: client.free_credits_used,
-                  free_credits_total: client.free_credits_total,
-                  subscription_status: client.subscription_status,
-                },
-                { status: 403 }
-              );
-            }
-          }
-        } catch (quotaErr) {
-          console.warn("Server quota check warning:", quotaErr);
+      if (!customer) {
+        const cleanMobile = normalizeIndianMobile(data.seller_mobile || "");
+        if (cleanMobile.length !== 10) {
+          return NextResponse.json(
+            { error: "Please log in with your verified mobile number to submit a property." },
+            { status: 400 }
+          );
         }
+        // Register customer record if submitted with valid mobile
+        customer = await PlatformService.createCustomer({
+          name: data.seller_name || "Property Seller",
+          mobile: cleanMobile,
+          email: data.seller_email,
+          accountType: data.seller_type || "owner",
+          isMobileVerified: Boolean(customerSession),
+        });
+      }
+
+      linkedCustomerId = customer.id;
+      sellerName = sellerName || customer.name;
+      sellerMobile = customer.mobile;
+      sellerEmail = sellerEmail || customer.email;
+      sellerType = sellerType || customer.role;
+
+      const eligibility = PlatformService.computeEligibility(customer);
+      if (!eligibility.eligible) {
+        return NextResponse.json(
+          {
+            error: eligibility.reason,
+            code: "SUBSCRIPTION_REQUIRED",
+            eligibility,
+          },
+          { status: 403 }
+        );
       }
     }
 
-    // Determine price and status
     const finalPrice = data.price !== undefined ? Number(data.price) : Number(data.expected_price || 0);
     const finalStatus = isAdmin ? (data.status || "draft") : "pending";
-    const authorEmail = session?.email || data.seller_email || "public_submitter";
+    const authorLabel = adminSession
+      ? `${adminSession.name} (${adminSession.role})`
+      : sellerName || sellerMobile || "customer";
 
     const created = await PropertyService.createProperty(
       {
@@ -221,24 +226,27 @@ export async function POST(request: NextRequest) {
         highlights: data.highlights || [],
         video_url: data.video_url,
         images: data.images || [],
-        documents: data.documents || [],
+        documents: isAdmin ? data.documents || [] : [],
         source: requestedSource,
         status: finalStatus,
-        is_featured: data.is_featured ?? false,
-        seller_name: data.seller_name,
-        seller_mobile: data.seller_mobile,
-        seller_email: data.seller_email,
-        seller_type: data.seller_type,
+        is_featured: isAdmin ? (data.is_featured ?? false) : false,
+        customer_id: linkedCustomerId,
+        seller_name: sellerName,
+        seller_mobile: sellerMobile,
+        seller_email: sellerEmail,
+        seller_type: sellerType,
       },
-      authorEmail
+      authorLabel
     );
 
     return NextResponse.json(
       {
         success: true,
         message: isAdmin
-          ? (finalStatus === "published" ? "Property published live successfully!" : "Property saved as draft successfully!")
-          : "Property submitted for verification. Tracking ID generated.",
+          ? finalStatus === "published"
+            ? "Property published live successfully!"
+            : "Property saved as draft successfully!"
+          : "Property submitted for admin review. Credit will be deducted only upon approval.",
         property: created,
         listing_id: created.listing_id,
         slug: created.slug,

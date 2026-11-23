@@ -497,8 +497,8 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 Send Direct Enquiry
               </h3>
               <EnquiryForm
+                propertyId={property.id}
                 propertyTitle={property.title}
-                listingId={property.listing_id}
               />
             </div>
           </div>

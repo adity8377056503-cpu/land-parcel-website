@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { usePropertyStore } from "@/lib/property-store";
 import { Property, ListingStatus, PropertyCategory, PropertyType } from "@/types";
-import { getStatusColor, getStatusLabel, getSourceLabel, getSourceColor, formatPrice, formatDateTime } from "@/lib/utils";
+import { getStatusColor, getStatusLabel, getSourceLabel, getSourceColor, formatPrice, formatDateTime, OFFICIAL_BUSINESS } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function AdminEditPropertyPage() {

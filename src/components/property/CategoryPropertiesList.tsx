@@ -23,7 +23,7 @@ export default function CategoryPropertiesList({
   const { properties } = usePropertyStore();
 
   const filtered = properties.filter((p) => {
-    if (p.status !== "published" && p.status !== "active") return false;
+    if (p.status !== "published") return false;
     if (category && p.category !== category) return false;
     if (locationName) {
       const loc = locationName.toLowerCase();

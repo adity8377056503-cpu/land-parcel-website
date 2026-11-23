@@ -94,10 +94,13 @@ export function usePropertyStore() {
       category: Property["category"];
       property_type: Property["property_type"];
       price: number;
+      expected_price?: number;
       total_area: number;
       area_unit: Property["area_unit"];
       source: PropertySource;
       status: ListingStatus;
+      consent?: boolean;
+      authorization_confirmed?: boolean;
     }
   ): Promise<Property> => {
     // 1. Sync directly to production server API
@@ -116,9 +119,13 @@ export function usePropertyStore() {
           setProperties(updated);
           return json.property;
         }
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Property submission failed (HTTP ${res.status})`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Server API addProperty error:", err);
+      throw err;
     }
 
     // Fallback local creation
@@ -208,7 +215,7 @@ export function usePropertyStore() {
   const updateProperty = async (
     id: string,
     updates: Partial<Property>,
-    adminEmail = OFFICIAL_BUSINESS.email,
+    adminEmail: string = OFFICIAL_BUSINESS.email,
     notes = "Property details updated"
   ) => {
     // 1. Sync to server API
@@ -230,14 +237,6 @@ export function usePropertyStore() {
       const previous_status = p.status;
       const new_status = updates.status || p.status;
       const statusChanged = previous_status !== new_status;
-
-      if (statusChanged && p.source !== "admin" && p.seller_mobile) {
-        if (new_status === "published" && previous_status !== "published") {
-          consumeStoredCredit(p.seller_mobile, p.source);
-        } else if (previous_status === "published" && (new_status === "rejected" || new_status === "unpublished")) {
-          refundStoredCredit(p.seller_mobile, p.source);
-        }
-      }
 
       const log = {
         id: generateId(),
@@ -266,7 +265,7 @@ export function usePropertyStore() {
   const updateStatus = async (
     id: string,
     newStatus: ListingStatus,
-    adminEmail = OFFICIAL_BUSINESS.email,
+    adminEmail: string = OFFICIAL_BUSINESS.email,
     notes?: string
   ) => {
     await updateProperty(id, { status: newStatus }, adminEmail, notes || `Status transitioned to ${newStatus}`);

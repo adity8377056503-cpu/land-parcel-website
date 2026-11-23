@@ -1,64 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-const ADMIN_STORAGE_KEY = "lp_admin_session";
+export interface AdminUserInfo {
+  userId: string;
+  name: string;
+  mobile: string;
+  email: string;
+  role: "super_admin" | "admin";
+  accountType: string;
+  expiresAt?: number;
+}
 
 export function useAdminAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminUser, setAdminUser] = useState<AdminUserInfo | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check server session cookie first
-    fetch("/api/admin/session")
-      .then((res) => {
-        if (res.ok) {
+  const refreshSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/session", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setAdminUser(data.user);
           setIsAuthenticated(true);
-        } else {
-          // Check localStorage as fallback
-          const session = typeof window !== "undefined" ? localStorage.getItem(ADMIN_STORAGE_KEY) : null;
-          if (session) {
-            try {
-              const parsed = JSON.parse(session);
-              if (parsed.authenticated && parsed.expiresAt > Date.now()) {
-                setIsAuthenticated(true);
-                return;
-              }
-            } catch {}
-          }
-          setIsAuthenticated(false);
+          return;
         }
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      });
+      }
+      setAdminUser(null);
+      setIsAuthenticated(false);
+    } catch {
+      setAdminUser(null);
+      setIsAuthenticated(false);
+    }
   }, []);
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
+
+  const login = async (
+    identifier: string,
+    password: string
+  ): Promise<{ ok: boolean; error?: string; user?: AdminUserInfo }> => {
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pass }),
+        body: JSON.stringify({ identifier, password }),
       });
 
-      if (res.ok) {
-        const session = {
-          authenticated: true,
-          email: email.trim().toLowerCase(),
-          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        };
-        if (typeof window !== "undefined") {
-          localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
-        }
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAdminUser(data.user);
         setIsAuthenticated(true);
-        return true;
+        return { ok: true, user: data.user };
       }
-      return false;
-    } catch (err) {
-      console.error("Login failed:", err);
-      return false;
+      return { ok: false, error: data.error || "Invalid credentials" };
+    } catch {
+      return { ok: false, error: "Authentication service unavailable" };
     }
   };
 
@@ -66,12 +68,17 @@ export function useAdminAuth() {
     try {
       await fetch("/api/admin/logout", { method: "POST" });
     } catch {}
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(ADMIN_STORAGE_KEY);
-    }
+    setAdminUser(null);
     setIsAuthenticated(false);
     router.push("/admin/login");
   };
 
-  return { isAuthenticated, login, logout };
+  return {
+    isAuthenticated,
+    adminUser,
+    isSuperAdmin: adminUser?.role === "super_admin",
+    login,
+    logout,
+    refreshSession,
+  };
 }

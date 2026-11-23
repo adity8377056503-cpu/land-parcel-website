@@ -12,14 +12,21 @@ export function middleware(request: NextRequest) {
     let isValid = false;
     if (token && token.includes(".")) {
       try {
-        const [payload] = token.split(".");
-        // Edge-compatible base64url decoding
-        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonStr = atob(base64);
-        const session = JSON.parse(jsonStr);
+        const [payload, signature] = token.split(".");
+        if (payload && signature && signature.length >= 32) {
+          // Edge-compatible base64url decoding (full HMAC signature verification occurs in every server API)
+          const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonStr = atob(base64);
+          const session = JSON.parse(jsonStr);
 
-        if (session && session.role === "admin" && session.expiresAt > Date.now()) {
-          isValid = true;
+          if (
+            session &&
+            (session.role === "super_admin" || session.role === "admin") &&
+            typeof session.expiresAt === "number" &&
+            session.expiresAt > Date.now()
+          ) {
+            isValid = true;
+          }
         }
       } catch {
         isValid = false;

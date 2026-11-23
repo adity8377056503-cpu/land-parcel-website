@@ -10,7 +10,7 @@ export default function InvestmentOpportunities() {
   const { properties } = usePropertyStore();
 
   const investments = properties
-    .filter((p) => (p.status === "published" || p.status === "active") && ["industrial", "commercial", "large-land"].includes(p.category))
+    .filter((p) => p.status === "published" && ["industrial", "commercial", "large-land"].includes(p.category))
     .slice(0, 3);
 
   const whatsappUrl = getWhatsAppUrl(

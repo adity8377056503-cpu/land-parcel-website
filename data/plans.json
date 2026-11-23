@@ -1,0 +1,43 @@
+[
+  {
+    "id": "plan-monthly-599",
+    "slug": "monthly-plan",
+    "name": "Monthly Plan",
+    "description": "Standard monthly listing package for property owners, dealers, agents, builders, and developers in Delhi NCR.",
+    "price": 599,
+    "billing_period": "monthly",
+    "validity_months": 1,
+    "listing_credits": 20,
+    "features": [
+      "20 Property Listing Credits",
+      "Validity: 1 Month (30 Days)",
+      "Separate from 5 Lifetime Free Credits",
+      "Credits Added Upon Payment Verification",
+      "Existing Published Properties Remain Live After Expiry",
+      "Official Invoice & Payment Record"
+    ],
+    "is_popular": false,
+    "is_active": true
+  },
+  {
+    "id": "plan-quarterly-999",
+    "slug": "quarterly-plan",
+    "name": "Quarterly Plan",
+    "description": "Best value 3-month package for active property dealers, agents, builders, and developers.",
+    "price": 999,
+    "billing_period": "quarterly",
+    "validity_months": 3,
+    "listing_credits": 50,
+    "features": [
+      "50 Property Listing Credits",
+      "Validity: 3 Months (90 Days)",
+      "Save ₹798 Compared to Monthly Renewals",
+      "Separate from 5 Lifetime Free Credits",
+      "Credits Added Upon Payment Verification",
+      "Existing Published Properties Remain Live After Expiry",
+      "Official Invoice & Payment Record"
+    ],
+    "is_popular": true,
+    "is_active": true
+  }
+]

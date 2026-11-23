@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +24,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { usePropertyStore } from "@/lib/property-store";
-import { useSubscriptionStore } from "@/lib/subscription-store";
+import { checkClientEligibility } from "@/lib/subscription-store";
+import { useCustomerAuth } from "@/lib/customer-auth";
 import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { PropertyCategory, PropertyType, PropertyImage } from "@/types";
 
@@ -90,7 +91,7 @@ const formSchema = z.object({
   seller_name: z.string().min(2, "Name must be at least 2 characters"),
   seller_mobile: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
   seller_email: z.string().email("Invalid email").optional().or(z.literal("")),
-  seller_type: z.enum(["owner", "agent", "developer"]),
+  seller_type: z.enum(["owner", "dealer", "agent", "builder", "developer"]),
 
   // Core Property
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -134,13 +135,6 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const SAMPLE_IMAGE_PRESETS = [
-  "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80",
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-  "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80",
-];
-
 export default function ListPropertyForm() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -153,7 +147,7 @@ export default function ListPropertyForm() {
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   const { addProperty } = usePropertyStore();
-  const { checkEligibility, activeClient, getOrCreateClient } = useSubscriptionStore();
+  const { customer: activeClient, eligibility: serverEligibility } = useCustomerAuth();
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
   const {
@@ -162,13 +156,14 @@ export default function ListPropertyForm() {
     formState: { errors },
     watch,
     trigger,
+    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      seller_name: activeClient?.name || "",
-      seller_mobile: activeClient?.mobile || "",
-      seller_email: activeClient?.email || "",
-      seller_type: activeClient?.role || "owner",
+      seller_name: "",
+      seller_mobile: "",
+      seller_email: "",
+      seller_type: "owner",
       area_unit: "sqft",
       consent: false,
       authorization_confirmed: false,
@@ -176,8 +171,17 @@ export default function ListPropertyForm() {
     },
   });
 
+  useEffect(() => {
+    if (activeClient) {
+      setValue("seller_name", activeClient.name);
+      setValue("seller_mobile", activeClient.mobile);
+      if (activeClient.email) setValue("seller_email", activeClient.email);
+      setValue("seller_type", activeClient.role);
+    }
+  }, [activeClient, setValue]);
+
   const watchMobile = watch("seller_mobile") || activeClient?.mobile || "";
-  const eligibility = checkEligibility(watchMobile, "owner");
+  const eligibility = serverEligibility || checkClientEligibility(activeClient, "owner");
 
   const selectedCategory = (watch("category") as PropertyCategory) || "residential";
 
@@ -285,13 +289,11 @@ export default function ListPropertyForm() {
 
       // Check quota eligibility before advancing past Step 1
       if (!eligibility.eligible) {
-        toast.error("Free listing quota of 5 properties reached. Please subscribe to continue.");
+        toast.error(eligibility.reason || "Listing quota reached. Please subscribe to continue.");
         setIsSubModalOpen(true);
         return;
       }
 
-      // Ensure client is registered in central client registry
-      getOrCreateClient(watch("seller_mobile"), watch("seller_name"), watch("seller_type"), watch("seller_email"));
       setStep(2);
       return;
     }
@@ -320,7 +322,7 @@ export default function ListPropertyForm() {
         category: data.category as PropertyCategory,
         property_type: data.property_type as PropertyType,
         status: "pending", // Public submissions are ALWAYS pending review
-        source: data.seller_type as "owner" | "agent" | "developer",
+        source: data.seller_type as "owner" | "dealer" | "agent" | "builder" | "developer",
         availability_status: "available",
         state: data.state,
         city: data.city,
@@ -537,9 +539,11 @@ export default function ListPropertyForm() {
             <div>
               <label className="label-field">I am Listing as: *</label>
               <select {...register("seller_type")} className="input-field text-sm">
-                <option value="owner">Direct Property Owner</option>
-                <option value="agent">Authorized Real Estate Agent / Mandate Holder</option>
-                <option value="developer">Builder / Real Estate Developer</option>
+                <option value="owner">Property Owner</option>
+                <option value="dealer">Property Dealer</option>
+                <option value="agent">Agent / Broker</option>
+                <option value="builder">Builder</option>
+                <option value="developer">Real Estate Developer</option>
               </select>
             </div>
           </div>
@@ -805,7 +809,7 @@ export default function ListPropertyForm() {
               <div className="flex gap-2 pt-2">
                 <input
                   type="url"
-                  placeholder="Paste direct image URL (or select preset below)..."
+                  placeholder="Or paste direct image URL of your property..."
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   className="input-field text-xs py-2 flex-1"
@@ -817,21 +821,6 @@ export default function ListPropertyForm() {
                 >
                   + Add Image
                 </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="flex items-center gap-2 pt-1 flex-wrap">
-                <span className="text-[11px] text-[#64748B]">Quick presets:</span>
-                {SAMPLE_IMAGE_PRESETS.map((p, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleAddImage(p)}
-                    className="text-[11px] text-[#172B4D] bg-[#EAF3FA] hover:bg-[#172B4D] hover:text-white px-2 py-0.5 rounded transition-colors"
-                  >
-                    Preset {idx + 1}
-                  </button>
-                ))}
               </div>
             </div>
 

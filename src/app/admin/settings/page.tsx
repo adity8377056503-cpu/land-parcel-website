@@ -6,10 +6,10 @@ import { OFFICIAL_BUSINESS } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function AdminSettingsPage() {
-  const [ownerName, setOwnerName] = useState(OFFICIAL_BUSINESS.owner_name);
-  const [whatsappNumber, setWhatsappNumber] = useState(OFFICIAL_BUSINESS.whatsapp_link_number);
-  const [officialEmail, setOfficialEmail] = useState(OFFICIAL_BUSINESS.email);
-  const [adminNotificationEmail, setAdminNotificationEmail] = useState(OFFICIAL_BUSINESS.email);
+  const [ownerName, setOwnerName] = useState<string>(OFFICIAL_BUSINESS.owner_name);
+  const [whatsappNumber, setWhatsappNumber] = useState<string>(OFFICIAL_BUSINESS.whatsapp_link_number);
+  const [officialEmail, setOfficialEmail] = useState<string>(OFFICIAL_BUSINESS.email);
+  const [adminNotificationEmail, setAdminNotificationEmail] = useState<string>(OFFICIAL_BUSINESS.email);
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState("https://n8n.yourdomain.com/webhook/land-parcel-leads");
   const [siteTitle, setSiteTitle] = useState("Land Parcel - Premium Real Estate in Delhi NCR");
   const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/landparcel");
@@ -33,6 +33,35 @@ export default function AdminSettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Super Admin Account Info */}
+        <div className="card p-6 border border-[#E2E8F0] bg-[#F8FAFC] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#C6A66B]" />
+              <h2 className="text-lg font-bold text-[#172B4D] font-display">
+                Primary Super Admin Account
+              </h2>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#172B4D] text-[#C6A66B]">
+              Super Admin · Full Access
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="bg-white p-3 rounded-xl border border-[#E2E8F0]">
+              <div className="text-[#64748B] font-semibold">Full Name</div>
+              <div className="text-sm font-bold text-[#172B4D] mt-0.5">Aditya Raj</div>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-[#E2E8F0]">
+              <div className="text-[#64748B] font-semibold">Mobile Number</div>
+              <div className="text-sm font-mono font-bold text-[#172B4D] mt-0.5">+91 8377056503</div>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-[#E2E8F0]">
+              <div className="text-[#64748B] font-semibold">Account Type</div>
+              <div className="text-sm font-bold text-[#172B4D] mt-0.5">Website Owner / Main Administrator</div>
+            </div>
+          </div>
+        </div>
+
         {/* Business Ownership & Identity */}
         <div className="card p-6 border border-[#E2E8F0] space-y-4">
           <div className="flex items-center gap-2 mb-2">

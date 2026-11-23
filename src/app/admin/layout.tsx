@@ -25,6 +25,7 @@ import {
   Shield,
   Loader2,
   CreditCard,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,10 +33,9 @@ function AdminSidebarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "all";
-  const router = useRouter();
-  const { isAuthenticated, logout } = useAdminAuth();
+  const { adminUser, logout } = useAdminAuth();
   const { counts } = usePropertyStore();
-  const { payments } = useSubscriptionStore();
+  const { payments } = useSubscriptionStore({ adminMode: true });
   const pendingPaymentsCount = payments.filter((p) => p.status === "pending_verification").length;
 
   if (pathname === "/admin/login") {
@@ -67,9 +67,17 @@ function AdminSidebarContent() {
             <span className="font-bold text-lg font-display tracking-tight text-[#C6A66B] ml-1">PARCEL</span>
           </div>
         </Link>
-        <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-300">
-          <Shield className="w-3.5 h-3.5 text-[#C6A66B]" />
-          <span>Dual Listing Console</span>
+        <div className="mt-3 p-2.5 rounded-xl bg-white/10 border border-white/10">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+            <Crown className="w-3.5 h-3.5 text-[#C6A66B]" />
+            <span>{adminUser?.name || "Aditya Raj"}</span>
+          </div>
+          <div className="text-[10px] text-[#C6A66B] font-semibold uppercase tracking-wider mt-0.5">
+            {adminUser?.role === "super_admin" ? "Super Admin · Owner" : "Administrator"}
+          </div>
+          <div className="text-[10px] text-slate-300 font-mono mt-0.5">
+            +91 {adminUser?.mobile || "8377056503"}
+          </div>
         </div>
       </div>
 
@@ -116,7 +124,12 @@ function AdminSidebarContent() {
               )}
             >
               <div className="flex items-center gap-2.5 line-clamp-1">
-                <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", active ? "text-[#C6A66B]" : isAdd ? "text-amber-400" : "text-slate-400")} />
+                <Icon
+                  className={cn(
+                    "w-3.5 h-3.5 flex-shrink-0",
+                    active ? "text-[#C6A66B]" : isAdd ? "text-amber-400" : "text-slate-400"
+                  )}
+                />
                 <span className="truncate">{sec.label}</span>
               </div>
               {sec.count !== undefined && (
@@ -138,7 +151,7 @@ function AdminSidebarContent() {
         })}
 
         <div className="pt-3 pb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Operations
+          Customers, Plans &amp; Leads
         </div>
 
         <Link
@@ -151,8 +164,13 @@ function AdminSidebarContent() {
           )}
         >
           <div className="flex items-center gap-2.5">
-            <CreditCard className={cn("w-3.5 h-3.5", pathname === "/admin/subscriptions" ? "text-[#C6A66B]" : "text-slate-400")} />
-            <span>Subscriptions & Plans</span>
+            <CreditCard
+              className={cn(
+                "w-3.5 h-3.5",
+                pathname === "/admin/subscriptions" ? "text-[#C6A66B]" : "text-slate-400"
+              )}
+            />
+            <span>Customers, Roles &amp; Plans</span>
           </div>
           {pendingPaymentsCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold bg-amber-400 text-[#172B4D] animate-pulse">
@@ -171,7 +189,7 @@ function AdminSidebarContent() {
           )}
         >
           <Users className="w-3.5 h-3.5 text-slate-400" />
-          <span>Leads & Inquiries</span>
+          <span>Leads &amp; Inquiries</span>
         </Link>
 
         <Link
@@ -210,14 +228,10 @@ function AdminSidebarContent() {
   );
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated } = useAdminAuth();
+  const { isAuthenticated, adminUser } = useAdminAuth();
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -247,12 +261,13 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <header className="bg-white border-b border-[#E2E8F0] px-8 py-4 flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-[#172B4D] font-display">
-              Administrative Command Center
+              Super Admin Command Center
             </h2>
-            <span className="badge bg-green-100 text-green-700 text-[10px]">
-              Dual System Active
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#172B4D] text-[#C6A66B] text-[10px] font-bold">
+              <Shield className="w-3 h-3" />
+              {adminUser?.name || "Aditya Raj"} · {adminUser?.role === "super_admin" ? "Super Admin" : "Admin"}
             </span>
           </div>
           <div className="flex items-center gap-3">

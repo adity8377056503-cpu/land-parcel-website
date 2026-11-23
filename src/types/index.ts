@@ -61,7 +61,9 @@ export type ListingStatus =
 export type PropertySource =
   | "admin"
   | "owner"
+  | "dealer"
   | "agent"
+  | "builder"
   | "developer";
 
 export type AreaUnit = "sqft" | "sqm" | "sqyd" | "acre" | "bigha" | "kanal" | "marla" | "hectare";
@@ -166,12 +168,13 @@ export interface Property {
   updated_at: string;
   published_at?: string;
   
-  // Seller / Contact Information
+  // Seller / Customer Contact Information
+  customer_id?: string;
   seller_id?: string;
   seller_name?: string;
   seller_mobile?: string;
   seller_email?: string;
-  seller_type?: "owner" | "agent" | "developer";
+  seller_type?: CustomerAccountType;
   seller?: Seller;
 }
 
@@ -326,7 +329,11 @@ export interface DashboardStats {
 // PROPERTY LISTING MONETIZATION & SUBSCRIPTION TYPES
 // =============================================================================
 
-export type ClientRole = "owner" | "agent" | "developer";
+export type UserRole = "customer" | "admin" | "super_admin";
+
+export type CustomerAccountType = "owner" | "dealer" | "agent" | "builder" | "developer";
+
+export type ClientRole = CustomerAccountType;
 
 export type SubscriptionStatus = "none" | "active" | "expired" | "pending" | "cancelled";
 
@@ -352,10 +359,13 @@ export interface SubscriptionPlan {
 
 export interface ClientAccount {
   id: string;
+  user_id?: string;
   name: string;
   mobile: string;
   email?: string;
-  role: ClientRole;
+  role: CustomerAccountType; // Account Type: Property Owner / Dealer / Agent / Builder / Developer
+  system_role: UserRole; // System Role: customer / admin / super_admin (strictly server-controlled)
+  is_mobile_verified: boolean;
   company_name?: string;
   rera_number?: string;
   pan_number?: string;
