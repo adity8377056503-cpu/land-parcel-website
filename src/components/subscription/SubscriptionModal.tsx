@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   CheckCircle2,
@@ -46,6 +46,12 @@ export default function SubscriptionModal({
   const [proofNotes, setProofNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedPlan) {
+      setCurrentPlan(selectedPlan);
+    }
+  }, [selectedPlan]);
 
   if (!isOpen) return null;
 

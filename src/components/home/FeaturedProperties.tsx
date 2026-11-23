@@ -9,7 +9,9 @@ import { OFFICIAL_BUSINESS, getWhatsAppUrl } from "@/lib/utils";
 export default function FeaturedProperties() {
   const { properties } = usePropertyStore();
 
-  const featured = properties.filter((p) => p.status === "published" && p.is_featured).slice(0, 6);
+  const published = properties.filter((p) => p.status === "published" || p.status === "active");
+  const featuredExplicit = published.filter((p) => p.is_featured);
+  const featured = (featuredExplicit.length > 0 ? featuredExplicit : published).slice(0, 6);
 
   const whatsappUrl = getWhatsAppUrl(
     OFFICIAL_BUSINESS.whatsapp_link_number,

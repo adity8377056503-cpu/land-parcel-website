@@ -19,12 +19,7 @@ function isSupabaseConfigured(): boolean {
 export async function POST(request: NextRequest) {
   try {
     const session = getAdminSessionFromRequest(request);
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin credentials required for media upload." },
-        { status: 401 }
-      );
-    }
+    const isAdmin = Boolean(session);
 
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
@@ -45,6 +40,33 @@ export async function POST(request: NextRequest) {
         { error: "No media files provided" },
         { status: 400 }
       );
+    }
+
+    // Validate mime types: only images and standard videos
+    const ALLOWED_MIME = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
+
+    for (const file of allFiles) {
+      if (file.type && !ALLOWED_MIME.includes(file.type.toLowerCase())) {
+        return NextResponse.json(
+          { error: `Unsupported media format: ${file.type}. Please upload JPG, PNG, WEBP, or MP4.` },
+          { status: 400 }
+        );
+      }
+      if (file.size > 25 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: `File ${file.name} exceeds maximum allowed size of 25MB.` },
+          { status: 400 }
+        );
+      }
     }
 
     const uploadedResults: Array<{ id: string; url: string; file_name: string; is_cover: boolean }> = [];

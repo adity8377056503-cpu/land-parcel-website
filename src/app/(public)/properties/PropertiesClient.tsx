@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, SlidersHorizontal, Grid3X3, List, X, Building2, MessageCircle } from "lucide-react";
@@ -136,7 +136,28 @@ export default function PropertiesClient() {
   };
 
   const hasActiveFilters =
-    Boolean(filters.query || filters.city || filters.category || filters.min_price || filters.max_price);
+    Boolean(filters.query || filters.city || filters.category || filters.property_type || filters.min_price || filters.max_price);
+
+  useEffect(() => {
+    const q = searchParams.get("query") || "";
+    const c = searchParams.get("city") || "";
+    const cat = (searchParams.get("category") as PropertyCategory) || undefined;
+    const pt = (searchParams.get("type") as any) || undefined;
+    const minP = Number(searchParams.get("min_price")) || 0;
+    const maxP = Number(searchParams.get("max_price")) || 0;
+    const s = (searchParams.get("sort") as PropertyFilters["sort"]) || "latest";
+
+    setFilters({
+      query: q,
+      city: c,
+      category: cat,
+      property_type: pt,
+      min_price: minP,
+      max_price: maxP,
+      sort: s,
+    });
+    setSearchQuery(q);
+  }, [searchParams]);
 
   return (
     <div>

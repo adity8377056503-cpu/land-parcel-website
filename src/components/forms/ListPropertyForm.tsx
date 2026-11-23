@@ -148,17 +148,9 @@ export default function ListPropertyForm() {
   const [confirmedListing, setConfirmedListing] = useState<{ id: string; listing_id: string; title: string } | null>(null);
 
   // Uploaded media state
-  const [images, setImages] = useState<PropertyImage[]>([
-    {
-      id: "img-init-1",
-      property_id: "",
-      url: SAMPLE_IMAGE_PRESETS[0],
-      is_cover: true,
-      sort_order: 0,
-      created_at: new Date().toISOString(),
-    },
-  ]);
+  const [images, setImages] = useState<PropertyImage[]>([]);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   const { addProperty } = usePropertyStore();
   const { checkEligibility, activeClient, getOrCreateClient } = useSubscriptionStore();
@@ -202,6 +194,70 @@ export default function ListPropertyForm() {
     };
     setImages((prev) => [...prev, newImg]);
     if (!urlToAdd) setNewImageUrl("");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingMedia(true);
+    const toastId = toast.loading(`Uploading ${files.length} property photo(s)...`);
+
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => formData.append("files", file));
+
+      const res = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.media && Array.isArray(data.media)) {
+          setImages((prev) => [
+            ...prev,
+            ...data.media.map((item: any, idx: number) => ({
+              id: item.id || `img-${Date.now()}-${idx}`,
+              property_id: "",
+              url: item.url,
+              is_cover: prev.length === 0 && idx === 0,
+              sort_order: prev.length + idx,
+              created_at: new Date().toISOString(),
+            })),
+          ]);
+          toast.success("Photos uploaded successfully!", { id: toastId });
+          return;
+        }
+      }
+      throw new Error("Upload failed");
+    } catch {
+      // Resilient local reader fallback
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          const result = uploadEvent.target?.result as string;
+          if (result) {
+            setImages((prev) => [
+              ...prev,
+              {
+                id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                property_id: "",
+                url: result,
+                is_cover: prev.length === 0,
+                sort_order: prev.length,
+                created_at: new Date().toISOString(),
+              },
+            ]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      toast.success("Photos added!", { id: toastId });
+    } finally {
+      setIsUploadingMedia(false);
+      e.target.value = "";
+    }
   };
 
   const handleRemoveImage = (id: string) => {
@@ -258,7 +314,7 @@ export default function ListPropertyForm() {
     setIsSubmitting(true);
     try {
       // 1. Submit through the central property store with status 'pending' (Pending Review)
-      const newProp = addProperty({
+      const newProp = await addProperty({
         title: data.title,
         description: data.description,
         category: data.category as PropertyCategory,
@@ -271,6 +327,7 @@ export default function ListPropertyForm() {
         locality: data.locality,
         address: data.address,
         price: parseFloat(data.expected_price),
+        expected_price: parseFloat(data.expected_price),
         total_area: parseFloat(data.total_area),
         area_unit: data.area_unit as any,
         built_up_area: data.built_up_area ? parseFloat(data.built_up_area) : undefined,
@@ -290,22 +347,9 @@ export default function ListPropertyForm() {
         seller_mobile: data.seller_mobile,
         seller_email: data.seller_email,
         seller_type: data.seller_type,
+        consent: Boolean(data.consent),
+        authorization_confirmed: Boolean(data.authorization_confirmed),
       });
-
-      // 2. Also send payload to backend API route for webhook trigger / DB replication
-      try {
-        await fetch("/api/properties", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...data,
-            listing_id: newProp.listing_id,
-            status: "pending",
-          }),
-        });
-      } catch (apiErr) {
-        // Non-blocking
-      }
 
       setConfirmedListing({
         id: newProp.id,
@@ -690,6 +734,39 @@ export default function ListPropertyForm() {
                   <span className="font-bold text-sm text-[#172B4D]">Property Photography ({images.length})</span>
                 </div>
                 <span className="text-xs text-[#64748B]">Click star to select cover</span>
+              </div>
+
+              {/* Photo Upload Zone */}
+              <div className="border-2 border-dashed border-[#C6A66B]/40 hover:border-[#C6A66B] rounded-xl p-5 text-center bg-[#FDFBF7] transition-colors">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/jpg"
+                  onChange={handleFileUpload}
+                  disabled={isUploadingMedia}
+                  id="public-photo-upload"
+                  className="hidden"
+                />
+                <label
+                  htmlFor="public-photo-upload"
+                  className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#C6A66B]/15 flex items-center justify-center text-[#172B4D]">
+                    {isUploadingMedia ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-[#C6A66B]" />
+                    ) : (
+                      <Upload className="w-5 h-5 text-[#C6A66B]" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-[#172B4D]">
+                      {isUploadingMedia ? "Uploading photos..." : "Click to select real property photos from phone/computer"}
+                    </span>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">
+                      Supports JPG, PNG, WEBP (Max 25MB each). Real on-site photos only.
+                    </p>
+                  </div>
+                </label>
               </div>
 
               {/* Thumbnail Gallery */}
