@@ -2,10 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Grid3X3, List, X } from "lucide-react";
+import Link from "next/link";
+import { Search, SlidersHorizontal, Grid3X3, List, X, Building2, MessageCircle } from "lucide-react";
 import PropertyCard from "@/components/property/PropertyCard";
 import { usePropertyStore } from "@/lib/property-store";
 import { Property, PropertyFilters, PropertyCategory } from "@/types";
+import { OFFICIAL_BUSINESS, getWhatsAppUrl } from "@/lib/utils";
 
 const CATEGORIES = [
   { label: "All Categories", value: "" },
@@ -113,7 +115,13 @@ export default function PropertiesClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState(filters.query || "");
 
+  const totalPublished = properties.filter((p) => p.status === "published" || p.status === "active").length;
   const filteredProperties = filterAndSortProperties(properties, filters);
+
+  const whatsappUrl = getWhatsAppUrl(
+    OFFICIAL_BUSINESS.whatsapp_link_number,
+    "Hello Suraj Prakash, I am inquiring about verified property listings in Delhi NCR at Land Parcel."
+  );
 
   const updateFilter = useCallback(
     (key: keyof PropertyFilters, value: PropertyFilters[keyof PropertyFilters]) => {
@@ -304,8 +312,40 @@ export default function PropertiesClient() {
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
+          ) : totalPublished === 0 ? (
+            <div className="text-center py-20 px-6 bg-white rounded-2xl shadow-card border border-[#E2E8F0] max-w-2xl mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-[#EAF3FA] flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-8 h-8 text-[#172B4D]" />
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-[#172B4D] font-display mb-2">
+                No Real Properties Listed Yet
+              </h3>
+              <p className="text-[#64748B] text-sm md:text-base mb-6 leading-relaxed">
+                Our marketplace is currently preparing verified property listings across Delhi NCR. All listings undergo strict physical inspection and title verification before appearing live.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link href="/list-property" className="btn-primary text-sm py-2.5 px-5">
+                  List Your Property
+                </Link>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-whatsapp text-sm py-2.5 px-5"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Contact on WhatsApp
+                </a>
+              </div>
+              <div className="mt-8 pt-6 border-t border-[#E2E8F0] text-xs text-[#64748B]">
+                Looking for private off-market deals? Call Suraj Prakash:{" "}
+                <a href="tel:+918750442235" className="text-[#172B4D] font-bold hover:underline">
+                  +91 8750442235
+                </a>
+              </div>
+            </div>
           ) : (
-            <div className="text-center py-20 bg-white rounded-2xl shadow-card border border-[#E2E8F0]">
+            <div className="text-center py-20 bg-white rounded-2xl shadow-card border border-[#E2E8F0] max-w-lg mx-auto">
               <div className="text-5xl mb-3">🔍</div>
               <h3 className="text-lg font-bold text-[#172B4D] mb-1">
                 No matching published properties found

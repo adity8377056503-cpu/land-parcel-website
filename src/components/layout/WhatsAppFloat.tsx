@@ -1,10 +1,10 @@
 "use client";
 
-import { getWhatsAppUrl } from "@/lib/utils";
+import { getWhatsAppUrl, OFFICIAL_BUSINESS } from "@/lib/utils";
 import { MessageCircle } from "lucide-react";
 
 export default function WhatsAppFloat() {
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || OFFICIAL_BUSINESS.whatsapp_link_number;
   const whatsappUrl = getWhatsAppUrl(
     whatsappNumber,
     "Hi, I'm looking for a property on Land Parcel. Please help me."

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Building2, Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
+import { OFFICIAL_BUSINESS, getWhatsAppUrl } from "@/lib/utils";
 
 const FOOTER_LINKS = {
   "Quick Links": [
@@ -50,22 +51,30 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-slate-300 text-sm leading-relaxed mb-5">
-              Your Trusted Partner in Premium Property Deals. Connecting buyers,
-              sellers, investors and businesses across Delhi NCR and beyond.
+              {OFFICIAL_BUSINESS.tagline}. Connecting buyers,
+              sellers, investors and businesses across {OFFICIAL_BUSINESS.primary_market}.
             </p>
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-sm text-slate-300">
                 <MapPin className="w-4 h-4 text-[#C6A66B] flex-shrink-0" />
-                <span>Delhi NCR, India</span>
+                <span>{OFFICIAL_BUSINESS.primary_market}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
+              <a
+                href={getWhatsAppUrl(OFFICIAL_BUSINESS.whatsapp_link_number, "Hi, I'd like to get in touch with Land Parcel.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
+              >
                 <Phone className="w-4 h-4 text-[#C6A66B] flex-shrink-0" />
-                <span>Contact via WhatsApp</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <span>WhatsApp: {OFFICIAL_BUSINESS.whatsapp_formatted}</span>
+              </a>
+              <a
+                href={`mailto:${OFFICIAL_BUSINESS.email}`}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
+              >
                 <Mail className="w-4 h-4 text-[#C6A66B] flex-shrink-0" />
-                <span>info@landparcel.in</span>
-              </div>
+                <span>{OFFICIAL_BUSINESS.email}</span>
+              </a>
             </div>
             {/* Social Links */}
             <div className="flex items-center gap-3 mt-5">
@@ -115,10 +124,10 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container-custom py-5 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-slate-400 text-xs">
-            © {new Date().getFullYear()} Land Parcel. All rights reserved.
+            © {new Date().getFullYear()} Land Parcel · Business Owner: {OFFICIAL_BUSINESS.owner_name}. All rights reserved.
           </p>
           <p className="text-slate-400 text-xs">
-            Real estate information is for property discovery purposes only. Always verify property details independently.
+            Premium real estate platform serving Delhi NCR. Verified deals &amp; authentic documentation.
           </p>
         </div>
       </div>

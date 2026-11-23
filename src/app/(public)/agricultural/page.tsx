@@ -3,8 +3,7 @@ import { generateSEO } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { Sprout, MapPin, Building2 } from "lucide-react";
-import PropertyCard from "@/components/property/PropertyCard";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import CategoryPropertiesList from "@/components/property/CategoryPropertiesList";
 
 export const metadata: Metadata = generateSEO({
   title: "Agricultural Land for Sale - Farm Land, Farmhouses",
@@ -15,10 +14,6 @@ export const metadata: Metadata = generateSEO({
 });
 
 export default function AgriculturalPage() {
-  const agricultureProperties = DEMO_PROPERTIES.filter(
-    (p) => p.category === "agricultural"
-  );
-
   return (
     <div>
       {/* Hero */}
@@ -80,21 +75,11 @@ export default function AgriculturalPage() {
             Agricultural Listings
           </h2>
 
-          {agricultureProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agricultureProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-[#64748B]">
-              <Sprout className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium">No agricultural listings yet</p>
-              <Link href="/list-property" className="btn-primary mt-6 inline-flex">
-                List Your Property
-              </Link>
-            </div>
-          )}
+          <CategoryPropertiesList
+            category="agricultural"
+            emptyTitle="No Agricultural Land Listed Yet"
+            emptySubtitle="Be the first to list agricultural land, a farmhouse, or orchard land in Haryana and NCR, or enquire for off-market parcels."
+          />
 
           <div className="text-center mt-10">
             <Link href="/properties?category=agricultural" className="btn-primary">

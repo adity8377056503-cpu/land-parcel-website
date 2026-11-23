@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Maximize2, MessageCircle, Eye, IndianRupee } from "lucide-react";
+import { MapPin, Maximize2, MessageCircle, Eye, IndianRupee, Building2 } from "lucide-react";
 import { Property } from "@/types";
-import { formatPrice, formatArea, getWhatsAppUrl, getPropertyWhatsAppMessage, cn } from "@/lib/utils";
+import { formatPrice, formatArea, getWhatsAppUrl, getPropertyWhatsAppMessage, cn, OFFICIAL_BUSINESS } from "@/lib/utils";
 
 interface PropertyCardProps {
   property: Property;
@@ -10,19 +10,11 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, className }: PropertyCardProps) {
-  const coverImage = property.images?.find((img) => img.is_cover)?.url ||
-    property.images?.[0]?.url ||
-    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80";
+  const coverImage = property.images?.find((img) => img.is_cover)?.url || property.images?.[0]?.url;
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || OFFICIAL_BUSINESS.whatsapp_link_number;
   const whatsappMessage = getPropertyWhatsAppMessage(property.title, property.listing_id);
   const whatsappUrl = getWhatsAppUrl(whatsappNumber, whatsappMessage);
-
-  const statusColors: Record<string, string> = {
-    active: "bg-green-100 text-green-700",
-    pending: "bg-yellow-100 text-yellow-700",
-    sold: "bg-blue-100 text-blue-700",
-  };
 
   const availabilityColors: Record<string, string> = {
     "ready-to-move": "bg-emerald-100 text-emerald-700",
@@ -40,23 +32,32 @@ export default function PropertyCard({ property, className }: PropertyCardProps)
 
   return (
     <div className={cn("card group", className)}>
-      {/* Image */}
-      <div className="relative h-52 overflow-hidden">
-        <Image
-          src={coverImage}
-          alt={property.title}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-        
+      {/* Image / Media Header */}
+      <div className="relative h-52 overflow-hidden bg-[#172B4D]">
+        {coverImage ? (
+          <>
+            <Image
+              src={coverImage}
+              alt={property.title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#172B4D] via-[#1e3a6e] to-[#254170] flex flex-col items-center justify-center text-white/80 p-4 text-center">
+            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-2">
+              <Building2 className="w-6 h-6 text-[#C6A66B]" />
+            </div>
+            <span className="text-xs font-bold tracking-wider uppercase text-[#C6A66B]">Land Parcel</span>
+            <span className="text-[11px] text-slate-300 capitalize">{property.category.replace("-", " ")}</span>
+          </div>
+        )}
+
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-          {property.is_demo && (
-            <span className="badge badge-demo">DEMO</span>
-          )}
-          {property.is_featured && !property.is_demo && (
+          {property.is_featured && (
             <span className="badge bg-[#C6A66B] text-white">Featured</span>
           )}
           <span
@@ -71,14 +72,14 @@ export default function PropertyCard({ property, className }: PropertyCardProps)
 
         {/* Category Tag */}
         <div className="absolute bottom-3 left-3">
-          <span className="px-2.5 py-1 bg-[#172B4D]/80 text-white text-xs font-medium rounded-lg capitalize">
+          <span className="px-2.5 py-1 bg-[#172B4D]/90 backdrop-blur-sm text-white text-xs font-medium rounded-lg capitalize">
             {property.category.replace("-", " ")}
           </span>
         </div>
 
         {/* ID */}
         <div className="absolute top-3 right-3">
-          <span className="px-2.5 py-1 bg-black/40 text-white text-xs rounded-lg">
+          <span className="px-2.5 py-1 bg-black/50 backdrop-blur-sm text-white text-xs font-mono rounded-lg">
             {property.listing_id}
           </span>
         </div>

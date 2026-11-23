@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { generateSEO } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
-import { Building2, Target, Eye, MapPin, Heart, Users, ArrowRight } from "lucide-react";
+import { Building2, Target, Eye, MapPin, Heart, Users, ArrowRight, ShieldCheck, Mail, Phone, Award } from "lucide-react";
+import { OFFICIAL_BUSINESS, getWhatsAppUrl } from "@/lib/utils";
 
 export const metadata: Metadata = generateSEO({
   title: "About Land Parcel - Premium Real Estate Platform Delhi NCR",
@@ -144,6 +145,50 @@ export default function AboutPage() {
                         {loc}
                       </span>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Founder & Business Ownership */}
+            <div className="mb-14 bg-gradient-to-br from-[#172B4D] to-[#243d6b] rounded-3xl p-8 text-white shadow-xl">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="w-20 h-20 rounded-2xl bg-[#C6A66B] flex items-center justify-center flex-shrink-0 text-[#172B4D] shadow-lg font-bold text-2xl font-display">
+                  SP
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
+                    <h3 className="text-2xl font-bold font-display text-white">
+                      {OFFICIAL_BUSINESS.owner_name}
+                    </h3>
+                    <span className="bg-[#C6A66B]/20 text-[#C6A66B] text-xs font-bold px-2.5 py-0.5 rounded-full border border-[#C6A66B]/30">
+                      Founder &amp; Business Owner
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                    Leading Land Parcel with a commitment to clean property titles, verified boundaries, and direct transparent dealings across Delhi NCR. Helping property owners, investors, and developers execute deals with complete confidence.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-300">
+                    <a
+                      href={getWhatsAppUrl(OFFICIAL_BUSINESS.whatsapp_link_number, "Hi Suraj ji, I would like to discuss a property matter.")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-white flex items-center gap-1.5 font-semibold text-[#C6A66B]"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>+91 {OFFICIAL_BUSINESS.whatsapp}</span>
+                    </a>
+                    <a
+                      href={`mailto:${OFFICIAL_BUSINESS.email}`}
+                      className="hover:text-white flex items-center gap-1.5"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{OFFICIAL_BUSINESS.email}</span>
+                    </a>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{OFFICIAL_BUSINESS.primary_market}</span>
+                    </span>
                   </div>
                 </div>
               </div>

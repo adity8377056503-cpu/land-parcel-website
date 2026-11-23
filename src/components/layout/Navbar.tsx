@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, Phone, ChevronDown, Building2 } from "lucide-react";
-import { cn, getWhatsAppUrl } from "@/lib/utils";
+import { cn, getWhatsAppUrl, OFFICIAL_BUSINESS } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { label: "Industrial", href: "/industrial" },
   { label: "Agricultural Land", href: "/agricultural" },
   { label: "Sell Property", href: "/list-property" },
+  { label: "Pricing", href: "/pricing" },
   { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
 ];
@@ -31,8 +32,8 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
-  const whatsappUrl = getWhatsAppUrl(whatsappNumber, "Hi, I'm looking for a property. Please help me.");
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || OFFICIAL_BUSINESS.whatsapp_link_number;
+  const whatsappUrl = getWhatsAppUrl(whatsappNumber, "Hi, I'm looking for a property on Land Parcel. Please help me.");
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -106,6 +107,12 @@ export default function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#172B4D] hover:text-[#C6A66B] px-3 py-2 rounded-xl hover:bg-[#EAF3FA] transition-colors"
+            >
+              Client Dashboard
+            </Link>
             <a
               href={whatsappUrl}
               target="_blank"

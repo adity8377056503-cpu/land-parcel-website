@@ -4,8 +4,7 @@ import PropertyCategories from "@/components/home/PropertyCategories";
 import Link from "next/link";
 import Image from "next/image";
 import { Home, Building2, MapPin } from "lucide-react";
-import PropertyCard from "@/components/property/PropertyCard";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import CategoryPropertiesList from "@/components/property/CategoryPropertiesList";
 
 export const metadata: Metadata = generateSEO({
   title: "Residential Properties for Sale in Delhi NCR",
@@ -25,10 +24,6 @@ const RESIDENTIAL_TYPES = [
 ];
 
 export default function ResidentialPage() {
-  const residentialProperties = DEMO_PROPERTIES.filter(
-    (p) => p.category === "residential"
-  );
-
   return (
     <div>
       {/* Hero */}
@@ -96,22 +91,11 @@ export default function ResidentialPage() {
             </Link>
           </div>
 
-          {residentialProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {residentialProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-[#64748B]">
-              <Home className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium">No residential listings yet</p>
-              <p className="text-sm mt-1">Be the first to list a residential property!</p>
-              <Link href="/list-property" className="btn-primary mt-6 inline-flex">
-                List Your Property
-              </Link>
-            </div>
-          )}
+          <CategoryPropertiesList
+            category="residential"
+            emptyTitle="No Residential Properties Listed Yet"
+            emptySubtitle="Be the first to list an independent house, flat, builder floor, or villa, or contact us for private inventory."
+          />
 
           <div className="text-center mt-10">
             <Link href="/properties?category=residential" className="btn-primary">

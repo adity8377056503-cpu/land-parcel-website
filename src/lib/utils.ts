@@ -3,6 +3,17 @@ import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
 import { ListingStatus, PropertySource } from "@/types";
 
+export const OFFICIAL_BUSINESS = {
+  brand_name: "Land Parcel",
+  owner_name: "Suraj Prakash",
+  email: "acreindiaclub@gmail.com",
+  whatsapp: "8750442235",
+  whatsapp_formatted: "+91 8750442235",
+  whatsapp_link_number: "918750442235",
+  tagline: "Your Trusted Partner in Premium Property Deals",
+  primary_market: "Delhi NCR, India",
+} as const;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

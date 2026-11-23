@@ -10,16 +10,16 @@ import Link from "next/link";
 export default function AdminLoginPage() {
   const router = useRouter();
   const { login } = useAdminAuth();
-  const [email, setEmail] = useState("admin@landparcel.in");
+  const [email, setEmail] = useState("acreindiaclub@gmail.com");
   const [password, setPassword] = useState("Admin@LandParcel2026");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      const ok = login(email, password);
+    try {
+      const ok = await login(email, password);
       if (ok) {
         toast.success("Welcome to Land Parcel Admin Portal");
         router.push("/admin");
@@ -27,7 +27,10 @@ export default function AdminLoginPage() {
         toast.error("Invalid administrator credentials");
         setLoading(false);
       }
-    }, 400);
+    } catch {
+      toast.error("Authentication request failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,9 +80,9 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="p-3 bg-[#EAF3FA] rounded-xl text-xs text-[#172B4D] leading-relaxed">
-            <strong>Development Credentials Pre-filled:</strong>
+            <strong>Official Admin Credentials Pre-filled:</strong>
             <br />
-            Email: <code className="font-mono">admin@landparcel.in</code>
+            Email: <code className="font-mono">acreindiaclub@gmail.com</code> (Suraj Prakash)
             <br />
             Password: <code className="font-mono">Admin@LandParcel2026</code>
           </div>

@@ -7,8 +7,8 @@ import { z } from "zod";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, Mail, MapPin, MessageCircle, Send, Loader2, CheckCircle2 } from "lucide-react";
-import { getWhatsAppUrl } from "@/lib/utils";
+import { Phone, Mail, MapPin, MessageCircle, Send, Loader2, CheckCircle2, User } from "lucide-react";
+import { getWhatsAppUrl, OFFICIAL_BUSINESS } from "@/lib/utils";
 
 const contactSchema = z.object({
   name: z.string().min(2),
@@ -24,8 +24,8 @@ type ContactFormData = z.infer<typeof contactSchema>;
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
-  const whatsappUrl = getWhatsAppUrl(whatsappNumber, "Hi, I'd like to get in touch with Land Parcel.");
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || OFFICIAL_BUSINESS.whatsapp_link_number;
+  const whatsappUrl = getWhatsAppUrl(whatsappNumber, "Hi Suraj ji, I'd like to get in touch regarding Land Parcel property deals.");
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -90,21 +90,26 @@ export default function ContactPage() {
               <div className="space-y-4 mb-8">
                 {[
                   {
+                    icon: User,
+                    label: "Business Owner / Founder",
+                    value: OFFICIAL_BUSINESS.owner_name,
+                  },
+                  {
                     icon: Phone,
                     label: "Phone / WhatsApp",
-                    value: "Contact via WhatsApp",
-                    action: { href: whatsappUrl, label: "Open WhatsApp" },
+                    value: OFFICIAL_BUSINESS.whatsapp_formatted,
+                    action: { href: whatsappUrl, label: "Chat on WhatsApp" },
                   },
                   {
                     icon: Mail,
-                    label: "Email",
-                    value: "info@landparcel.in",
-                    action: { href: "mailto:info@landparcel.in", label: "Send Email" },
+                    label: "Official Email",
+                    value: OFFICIAL_BUSINESS.email,
+                    action: { href: `mailto:${OFFICIAL_BUSINESS.email}`, label: "Send Email" },
                   },
                   {
                     icon: MapPin,
-                    label: "Location",
-                    value: "Delhi NCR, India",
+                    label: "Primary Market & Office",
+                    value: OFFICIAL_BUSINESS.primary_market,
                   },
                 ].map((item) => {
                   const Icon = item.icon;

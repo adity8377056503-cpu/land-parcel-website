@@ -77,7 +77,7 @@ export default function AdminEditPropertyPage() {
         status: nextStatus,
         is_featured: isFeatured,
       },
-      "admin@landparcel.in",
+      OFFICIAL_BUSINESS.email,
       notes
     );
 
@@ -94,7 +94,7 @@ export default function AdminEditPropertyPage() {
     updateProperty(
       property.id,
       { status: "rejected" },
-      "admin@landparcel.in",
+      OFFICIAL_BUSINESS.email,
       `Listing Rejected: ${reason}`
     );
     toast.error("Listing rejected and moved to Rejected Listings.");

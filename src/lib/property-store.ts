@@ -1,27 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Property, ListingStatus, PropertySource } from "@/types";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
-import { generateListingId, generateSlug, generateId } from "@/lib/utils";
+import { generateListingId, generateSlug, generateId, OFFICIAL_BUSINESS } from "@/lib/utils";
+import { consumeStoredCredit, refundStoredCredit } from "@/lib/subscription-store";
 
 const STORAGE_KEY = "lp_properties_central_db";
 
 export function loadStoredProperties(): Property[] {
   if (typeof window === "undefined") {
-    return DEMO_PROPERTIES;
+    return [];
   }
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_PROPERTIES));
-      return DEMO_PROPERTIES;
-    }
+    if (!data) return [];
     const parsed = JSON.parse(data);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEMO_PROPERTIES;
-  } catch (err) {
-    console.error("Failed to load local property store:", err);
-    return DEMO_PROPERTIES;
+    if (Array.isArray(parsed)) {
+      return parsed.filter(
+        (p) =>
+          !p.is_demo &&
+          !p.id?.startsWith("demo-") &&
+          !(p.listing_id || "").includes("DEMO") &&
+          !(p.title || "").toLowerCase().includes("demo -")
+      );
+    }
+    return [];
+  } catch {
+    return [];
   }
 }
 
@@ -29,34 +34,60 @@ export function saveStoredProperties(properties: Property[]) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
-      // Dispatch custom event for real-time reactive sync across components
       window.dispatchEvent(new Event("lp_properties_updated"));
     } catch (err) {
-      console.error("Failed to persist property store:", err);
+      console.error("Failed to persist local cache:", err);
     }
   }
 }
 
 /**
- * Hook to access and manage the central property database with instant live updates
+ * Hook to access and manage properties directly backed by production server database & Supabase.
  */
 export function usePropertyStore() {
-  const [properties, setProperties] = useState<Property[]>(DEMO_PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    setProperties(loadStoredProperties());
+  const fetchServerProperties = useCallback(async () => {
+    try {
+      const res = await fetch("/api/properties", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.properties)) {
+          setProperties(json.properties);
+          saveStoredProperties(json.properties);
+          setIsLoaded(true);
+          return;
+        }
+      }
+    } catch {
+      // Server unreachable, use cached local properties
+    }
+    const cached = loadStoredProperties();
+    setProperties(cached);
     setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    // 1. Initial quick load from local cache
+    const initial = loadStoredProperties();
+    if (initial.length > 0) {
+      setProperties(initial);
+      setIsLoaded(true);
+    }
+
+    // 2. Refresh from server database
+    fetchServerProperties();
 
     const handleUpdate = () => {
-      setProperties(loadStoredProperties());
+      fetchServerProperties();
     };
 
     window.addEventListener("lp_properties_updated", handleUpdate);
     return () => window.removeEventListener("lp_properties_updated", handleUpdate);
-  }, []);
+  }, [fetchServerProperties]);
 
-  const addProperty = (
+  const addProperty = async (
     data: Partial<Property> & {
       title: string;
       city: string;
@@ -68,11 +99,33 @@ export function usePropertyStore() {
       source: PropertySource;
       status: ListingStatus;
     }
-  ): Property => {
-    const current = loadStoredProperties();
+  ): Promise<Property> => {
+    // 1. Sync directly to production server API
+    try {
+      const res = await fetch("/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.property) {
+          const updated = [json.property, ...properties.filter((p) => p.id !== json.property.id)];
+          saveStoredProperties(updated);
+          setProperties(updated);
+          return json.property;
+        }
+      }
+    } catch (err) {
+      console.error("Server API addProperty error:", err);
+    }
+
+    // Fallback local creation
     const id = generateId();
     const listing_id = generateListingId();
     const slug = generateSlug(data.title, data.city) + "-" + listing_id.toLowerCase().slice(-4);
+    const now = new Date().toISOString();
 
     const newProperty: Property = {
       id,
@@ -131,33 +184,45 @@ export function usePropertyStore() {
           id: generateId(),
           property_id: id,
           action: data.source === "admin" ? (data.status === "published" ? "Created & Published Directly" : "Saved as Draft") : "Public Submission Created",
-          changed_by: data.source === "admin" ? "admin@landparcel.in" : (data.seller_name || "Public Client"),
+          changed_by: data.source === "admin" ? OFFICIAL_BUSINESS.email : (data.seller_name || "Public Client"),
           notes: data.source === "admin" ? "Created in Admin Console" : "Submitted via List Your Property form",
           new_status: data.status,
-          timestamp: new Date().toISOString(),
+          timestamp: now,
         },
       ],
       seller_name: data.seller_name,
       seller_mobile: data.seller_mobile,
       seller_email: data.seller_email,
       seller_type: data.seller_type || (data.source === "admin" ? undefined : "owner"),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      published_at: data.status === "published" ? new Date().toISOString() : undefined,
+      created_at: now,
+      updated_at: now,
+      published_at: data.status === "published" ? now : undefined,
     };
 
-    const updated = [newProperty, ...current];
+    const updated = [newProperty, ...properties];
     saveStoredProperties(updated);
     setProperties(updated);
     return newProperty;
   };
 
-  const updateProperty = (
+  const updateProperty = async (
     id: string,
     updates: Partial<Property>,
-    adminEmail = "admin@landparcel.in",
+    adminEmail = OFFICIAL_BUSINESS.email,
     notes = "Property details updated"
   ) => {
+    // 1. Sync to server API
+    try {
+      await fetch(`/api/properties/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...updates, statusNotes: notes }),
+      });
+    } catch (err) {
+      console.error("Server API updateProperty error:", err);
+    }
+
+    // 2. Update local state
     const current = loadStoredProperties();
     const updated = current.map((p) => {
       if (p.id !== id) return p;
@@ -166,10 +231,18 @@ export function usePropertyStore() {
       const new_status = updates.status || p.status;
       const statusChanged = previous_status !== new_status;
 
+      if (statusChanged && p.source !== "admin" && p.seller_mobile) {
+        if (new_status === "published" && previous_status !== "published") {
+          consumeStoredCredit(p.seller_mobile, p.source);
+        } else if (previous_status === "published" && (new_status === "rejected" || new_status === "unpublished")) {
+          refundStoredCredit(p.seller_mobile, p.source);
+        }
+      }
+
       const log = {
         id: generateId(),
         property_id: id,
-        action: statusChanged ? `Status changed to ${new_status}` : "Property Edited",
+        action: statusChanged ? `Status transitioned to ${new_status}` : "Property Edited",
         changed_by: adminEmail,
         notes,
         previous_status,
@@ -190,23 +263,28 @@ export function usePropertyStore() {
     setProperties(updated);
   };
 
-  const updateStatus = (
+  const updateStatus = async (
     id: string,
     newStatus: ListingStatus,
-    adminEmail = "admin@landparcel.in",
+    adminEmail = OFFICIAL_BUSINESS.email,
     notes?: string
   ) => {
-    updateProperty(id, { status: newStatus }, adminEmail, notes || `Status transitioned to ${newStatus}`);
+    await updateProperty(id, { status: newStatus }, adminEmail, notes || `Status transitioned to ${newStatus}`);
   };
 
-  const deleteProperty = (id: string) => {
+  const deleteProperty = async (id: string) => {
+    try {
+      await fetch(`/api/properties/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Server API deleteProperty error:", err);
+    }
     const current = loadStoredProperties();
     const updated = current.filter((p) => p.id !== id);
     saveStoredProperties(updated);
     setProperties(updated);
   };
 
-  // Dedicated section filtered listings
+  // Filtered views
   const allProperties = properties;
   const myUploaded = properties.filter((p) => p.source === "admin");
   const clientSubmissions = properties.filter((p) => p.source !== "admin");
@@ -243,5 +321,6 @@ export function usePropertyStore() {
     drafts,
     rejected,
     counts,
+    refresh: fetchServerProperties,
   };
 }

@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Building2, Filter, ArrowLeft } from "lucide-react";
-import PropertyCard from "@/components/property/PropertyCard";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import CategoryPropertiesList from "@/components/property/CategoryPropertiesList";
 import { LOCATION_SEO, generateSEO } from "@/lib/seo";
 
 interface LocationPageProps {
@@ -135,14 +134,6 @@ export default async function LocationDetailPage({ params }: LocationPageProps) 
     notFound();
   }
 
-  // Find matching properties
-  const matchingProperties = DEMO_PROPERTIES.filter(
-    (p) =>
-      p.locality.toLowerCase().includes(loc.name.toLowerCase()) ||
-      p.city.toLowerCase().includes(loc.name.toLowerCase()) ||
-      p.address.toLowerCase().includes(loc.name.toLowerCase())
-  );
-
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero */}
@@ -193,7 +184,7 @@ export default async function LocationDetailPage({ params }: LocationPageProps) 
                 Available Listings in {loc.name}
               </h2>
               <p className="text-[#64748B] text-sm mt-1">
-                Showing {matchingProperties.length} active demo listings
+                Verified residential, commercial, industrial and land opportunities
               </p>
             </div>
             <Link
@@ -205,31 +196,11 @@ export default async function LocationDetailPage({ params }: LocationPageProps) 
             </Link>
           </div>
 
-          {matchingProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {matchingProperties.map((p) => (
-                <PropertyCard key={p.id} property={p} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-12 text-center shadow-card border border-[#E2E8F0]">
-              <Building2 className="w-12 h-12 text-[#64748B] mx-auto mb-3 opacity-40" />
-              <h3 className="text-lg font-bold text-[#172B4D] mb-1">
-                No active listings currently in {loc.name}
-              </h3>
-              <p className="text-sm text-[#64748B] max-w-md mx-auto mb-6">
-                Be the first to list a property in this high-demand location or explore similar surrounding localities.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Link href="/list-property" className="btn-primary text-sm py-2.5 px-5">
-                  List Your Property in {loc.name}
-                </Link>
-                <Link href="/properties" className="btn-secondary text-sm py-2.5 px-5">
-                  View All Listings
-                </Link>
-              </div>
-            </div>
-          )}
+          <CategoryPropertiesList
+            locationName={loc.name}
+            emptyTitle={`No Active Listings Currently in ${loc.name}`}
+            emptySubtitle={`Be the first to list a property in this high-demand location or explore similar surrounding localities in Delhi NCR.`}
+          />
 
           <div className="mt-12">
             <Link

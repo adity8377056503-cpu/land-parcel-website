@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Settings, Save, Phone, Mail, Globe, Shield, Database, Webhook } from "lucide-react";
+import { Settings, Save, Phone, Mail, Globe, Shield, Database, Webhook, User } from "lucide-react";
+import { OFFICIAL_BUSINESS } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function AdminSettingsPage() {
-  const [whatsappNumber, setWhatsappNumber] = useState("919999999999");
-  const [officialEmail, setOfficialEmail] = useState("info@landparcel.in");
-  const [adminNotificationEmail, setAdminNotificationEmail] = useState("admin@landparcel.in");
+  const [ownerName, setOwnerName] = useState(OFFICIAL_BUSINESS.owner_name);
+  const [whatsappNumber, setWhatsappNumber] = useState(OFFICIAL_BUSINESS.whatsapp_link_number);
+  const [officialEmail, setOfficialEmail] = useState(OFFICIAL_BUSINESS.email);
+  const [adminNotificationEmail, setAdminNotificationEmail] = useState(OFFICIAL_BUSINESS.email);
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState("https://n8n.yourdomain.com/webhook/land-parcel-leads");
   const [siteTitle, setSiteTitle] = useState("Land Parcel - Premium Real Estate in Delhi NCR");
   const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/landparcel");
@@ -16,27 +18,58 @@ export default function AdminSettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Settings saved successfully");
+    toast.success("Official settings saved successfully");
   };
 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-[#172B4D] font-display">
-          System & Marketplace Settings
+          System &amp; Marketplace Settings
         </h1>
         <p className="text-sm text-[#64748B]">
-          Configure official contact numbers, WhatsApp automation routing, n8n webhook triggers, and SEO presets.
+          Configure official business identity, contact numbers, WhatsApp automation, and SEO presets.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Business Ownership & Identity */}
+        <div className="card p-6 border border-[#E2E8F0] space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-5 h-5 text-[#C6A66B]" />
+            <h2 className="text-lg font-bold text-[#172B4D] font-display">
+              Business Ownership &amp; Identity
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label-field">Business Owner Name</label>
+              <input
+                type="text"
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+                className="input-field text-sm font-semibold text-[#172B4D]"
+              />
+            </div>
+            <div>
+              <label className="label-field">Brand Name</label>
+              <input
+                type="text"
+                readOnly
+                value="Land Parcel"
+                className="input-field text-sm font-semibold bg-slate-50 text-[#172B4D]"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Contact & WhatsApp */}
         <div className="card p-6 border border-[#E2E8F0] space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <Phone className="w-5 h-5 text-[#C6A66B]" />
             <h2 className="text-lg font-bold text-[#172B4D] font-display">
-              Contact & WhatsApp Routing
+              Contact &amp; WhatsApp Routing
             </h2>
           </div>
 
@@ -47,22 +80,22 @@ export default function AdminSettingsPage() {
                 type="text"
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                className="input-field text-sm"
-                placeholder="919999999999"
+                className="input-field text-sm font-mono"
+                placeholder="918750442235"
               />
               <span className="text-[11px] text-[#64748B] mt-1 block">
-                Powers all WhatsApp click-to-chat inquiry links on property pages.
+                Powers all WhatsApp click-to-chat inquiry links on property pages (8750442235).
               </span>
             </div>
 
             <div>
-              <label className="label-field">Public Inquiries Email</label>
+              <label className="label-field">Official Business Email</label>
               <input
                 type="email"
                 value={officialEmail}
                 onChange={(e) => setOfficialEmail(e.target.value)}
-                className="input-field text-sm"
-                placeholder="info@landparcel.in"
+                className="input-field text-sm font-semibold"
+                placeholder="acreindiaclub@gmail.com"
               />
             </div>
           </div>

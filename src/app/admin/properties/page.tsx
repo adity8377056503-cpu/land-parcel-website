@@ -300,15 +300,44 @@ function AdminPropertiesContent() {
                         </>
                       )}
 
-                      {/* Quick Mark Sold */}
+                      {/* Quick Mark Sold / Rented / Unpublish */}
                       {property.status === "published" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickStatus(property.id, "sold")}
+                            className="px-2 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Mark Sold"
+                          >
+                            Sold
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickStatus(property.id, "rented")}
+                            className="px-2 py-1 text-[11px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                            title="Mark Rented"
+                          >
+                            Rented
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickStatus(property.id, "unpublished")}
+                            className="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            title="Unpublish"
+                          >
+                            Unpublish
+                          </button>
+                        </>
+                      )}
+
+                      {(property.status === "sold" || property.status === "rented" || property.status === "unpublished") && (
                         <button
                           type="button"
-                          onClick={() => handleQuickStatus(property.id, "sold")}
-                          className="px-2 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="Mark Sold"
+                          onClick={() => handleQuickStatus(property.id, "published")}
+                          className="px-2 py-1 text-[11px] font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                          title="Relist / Publish"
                         >
-                          Sold
+                          Relist
                         </button>
                       )}
 
@@ -355,21 +384,35 @@ function AdminPropertiesContent() {
           {finalFiltered.length === 0 && (
             <div className="p-10 text-center text-[#64748B] space-y-2">
               <Building className="w-8 h-8 text-[#64748B] mx-auto opacity-40" />
-              <div className="font-semibold text-[#172B4D]">No properties found in this section</div>
-              <p className="text-xs">
-                {activeTab === "pending"
-                  ? "There are no pending submissions awaiting review right now."
-                  : activeTab === "drafts"
-                  ? "You have no saved draft listings."
-                  : "Try clearing filters or search term."}
-              </p>
-              {activeTab !== "all" && (
-                <button
-                  onClick={() => router.push("/admin/properties?tab=all")}
-                  className="btn-secondary text-xs py-1.5 px-3 mt-2 inline-flex"
-                >
-                  View All Properties
-                </button>
+              {counts.all === 0 ? (
+                <>
+                  <div className="font-semibold text-[#172B4D] text-base">Central Property Database is Clean & Ready</div>
+                  <p className="text-xs max-w-md mx-auto">
+                    All demo listings have been removed. Upload your actual properties using the Add New Property form.
+                  </p>
+                  <Link href="/admin/properties/new" className="btn-primary text-xs py-2 px-4 mt-3 inline-flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" /> Add New Property
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="font-semibold text-[#172B4D]">No properties found in this section</div>
+                  <p className="text-xs">
+                    {activeTab === "pending"
+                      ? "There are no pending submissions awaiting review right now."
+                      : activeTab === "drafts"
+                      ? "You have no saved draft listings."
+                      : "Try clearing filters or search term."}
+                  </p>
+                  {activeTab !== "all" && (
+                    <button
+                      onClick={() => router.push("/admin/properties?tab=all")}
+                      className="btn-secondary text-xs py-1.5 px-3 mt-2 inline-flex"
+                    >
+                      View All Properties
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

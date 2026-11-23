@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-lg font-bold text-[#172B4D] mb-2 font-display">5. Contact</h2>
               <p>
-                If you have questions regarding this Privacy Policy, please email <a href="mailto:info@landparcel.in" className="text-[#172B4D] font-semibold underline">info@landparcel.in</a>.
+                If you have questions regarding this Privacy Policy, please email <a href="mailto:acreindiaclub@gmail.com" className="text-[#172B4D] font-semibold underline">acreindiaclub@gmail.com</a>.
               </p>
             </section>
           </div>

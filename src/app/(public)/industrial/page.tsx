@@ -3,8 +3,7 @@ import { generateSEO } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { Warehouse, MapPin, Building2 } from "lucide-react";
-import PropertyCard from "@/components/property/PropertyCard";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import CategoryPropertiesList from "@/components/property/CategoryPropertiesList";
 
 export const metadata: Metadata = generateSEO({
   title: "Industrial Properties - Warehouses, Factories & Industrial Plots",
@@ -24,10 +23,6 @@ const INDUSTRIAL_TYPES = [
 ];
 
 export default function IndustrialPage() {
-  const industrialProperties = DEMO_PROPERTIES.filter(
-    (p) => p.category === "industrial"
-  );
-
   return (
     <div>
       {/* Hero */}
@@ -110,21 +105,11 @@ export default function IndustrialPage() {
             </h2>
           </div>
 
-          {industrialProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {industrialProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-[#64748B]">
-              <Warehouse className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium">No industrial listings yet</p>
-              <Link href="/list-property" className="btn-primary mt-6 inline-flex">
-                List Your Property
-              </Link>
-            </div>
-          )}
+          <CategoryPropertiesList
+            category="industrial"
+            emptyTitle="No Industrial Properties Listed Yet"
+            emptySubtitle="Be the first to list a warehouse, factory, industrial plot, or logistics facility in Gurugram, Manesar, and NCR."
+          />
 
           <div className="text-center mt-10">
             <Link href="/properties?category=industrial" className="btn-primary">

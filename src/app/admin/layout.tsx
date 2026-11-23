@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { useAdminAuth } from "@/lib/admin-auth";
 import { usePropertyStore } from "@/lib/property-store";
+import { useSubscriptionStore } from "@/lib/subscription-store";
 import {
   Building2,
   LayoutDashboard,
@@ -23,6 +24,7 @@ import {
   ExternalLink,
   Shield,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,8 @@ function AdminSidebarContent() {
   const router = useRouter();
   const { isAuthenticated, logout } = useAdminAuth();
   const { counts } = usePropertyStore();
+  const { payments } = useSubscriptionStore();
+  const pendingPaymentsCount = payments.filter((p) => p.status === "pending_verification").length;
 
   if (pathname === "/admin/login") {
     return null;
@@ -136,6 +140,26 @@ function AdminSidebarContent() {
         <div className="pt-3 pb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
           Operations
         </div>
+
+        <Link
+          href="/admin/subscriptions"
+          className={cn(
+            "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors",
+            pathname === "/admin/subscriptions"
+              ? "bg-white/15 text-white font-bold text-[#C6A66B]"
+              : "text-slate-300 hover:bg-white/10 hover:text-white"
+          )}
+        >
+          <div className="flex items-center gap-2.5">
+            <CreditCard className={cn("w-3.5 h-3.5", pathname === "/admin/subscriptions" ? "text-[#C6A66B]" : "text-slate-400")} />
+            <span>Subscriptions & Plans</span>
+          </div>
+          {pendingPaymentsCount > 0 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold bg-amber-400 text-[#172B4D] animate-pulse">
+              {pendingPaymentsCount}
+            </span>
+          )}
+        </Link>
 
         <Link
           href="/admin/leads"

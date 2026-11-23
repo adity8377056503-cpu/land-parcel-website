@@ -3,8 +3,7 @@ import { generateSEO } from "@/lib/seo";
 import Link from "next/link";
 import { Building2, Search, ArrowRight, Home, Warehouse, Sprout, Store, Layers } from "lucide-react";
 import HeroSearch from "@/components/home/HeroSearch";
-import PropertyCard from "@/components/property/PropertyCard";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import BuyPropertiesList from "@/components/property/BuyPropertiesList";
 
 export const metadata: Metadata = generateSEO({
   title: "Buy Property in Delhi NCR - Residential, Commercial, Land & Industrial",
@@ -89,11 +88,7 @@ export default function BuyPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DEMO_PROPERTIES.slice(0, 6).map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          <BuyPropertiesList />
         </div>
       </section>
     </div>

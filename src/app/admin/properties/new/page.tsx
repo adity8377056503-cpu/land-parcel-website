@@ -87,13 +87,6 @@ const PROPERTY_TYPES: Record<PropertyCategory, { label: string; value: PropertyT
   ],
 };
 
-const SAMPLE_PRESETS = [
-  "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
-  "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80",
-  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80",
-];
-
 export default function AdminNewPropertyPage() {
   const router = useRouter();
   const { addProperty } = usePropertyStore();
@@ -140,22 +133,114 @@ export default function AdminNewPropertyPage() {
 
   // Media
   const [videoUrl, setVideoUrl] = useState("");
-  const [images, setImages] = useState<PropertyImage[]>([
-    {
-      id: "img-1",
-      property_id: "",
-      url: SAMPLE_PRESETS[0],
-      is_cover: true,
-      sort_order: 0,
-      created_at: new Date().toISOString(),
-    },
-  ]);
+  const [images, setImages] = useState<PropertyImage[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Private Documents
   const [documents, setDocuments] = useState<PropertyDocument[]>([]);
   const [docTitle, setDocTitle] = useState("");
   const [docUrl, setDocUrl] = useState("");
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+    Array.from(files).forEach((file) => {
+      formData.append("files", file);
+    });
+
+    setIsUploadingMedia(true);
+    const toastId = toast.loading("Uploading photos to secure storage...");
+
+    try {
+      const res = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.media && Array.isArray(data.media)) {
+          setImages((prev) => [
+            ...prev,
+            ...data.media.map((item: any, idx: number) => ({
+              id: item.id || "img-" + Date.now() + "-" + idx,
+              property_id: "",
+              url: item.url,
+              is_cover: prev.length === 0 && idx === 0,
+              sort_order: prev.length + idx,
+              created_at: new Date().toISOString(),
+            })),
+          ]);
+          toast.success(`Successfully uploaded ${data.media.length} property photos!`, { id: toastId });
+          return;
+        }
+      }
+      throw new Error("Server upload returned non-200");
+    } catch {
+      // Resilient fallback: read as data URLs locally
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          const result = uploadEvent.target?.result as string;
+          if (result) {
+            setImages((prev) => [
+              ...prev,
+              {
+                id: "img-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+                property_id: "",
+                url: result,
+                is_cover: prev.length === 0,
+                sort_order: prev.length,
+                created_at: new Date().toISOString(),
+              },
+            ]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      toast.success("Photos added", { id: toastId });
+    } finally {
+      setIsUploadingMedia(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDocumentFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const docName = docTitle.trim() || file.name;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", docName);
+
+    const toastId = toast.loading("Uploading confidential ownership document...");
+    try {
+      const res = await fetch("/api/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.document) {
+          setDocuments((prev) => [...prev, json.document]);
+          setDocTitle("");
+          toast.success("Document attached to confidential registry", { id: toastId });
+          return;
+        }
+      }
+      throw new Error("Document upload failed");
+    } catch {
+      toast.error("Failed to upload document", { id: toastId });
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   const handleAddImage = (url?: string) => {
     const target = url || imageUrlInput.trim();
@@ -213,7 +298,7 @@ export default function AdminNewPropertyPage() {
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
-  const handleSave = (targetStatus: "draft" | "published") => {
+  const handleSave = async (targetStatus: "draft" | "published") => {
     if (!title.trim()) {
       toast.error("Property Title is required");
       return;
@@ -227,52 +312,63 @@ export default function AdminNewPropertyPage() {
       return;
     }
 
-    const created = addProperty({
-      title: title.trim(),
-      description: description.trim() || "Prime property listed by Land Parcel administrator.",
-      category,
-      property_type: propertyType,
-      status: targetStatus,
-      source: "admin", // Admin Added
-      availability_status: "available",
-      state,
-      city: city.trim() || "Delhi",
-      locality: locality.trim() || city,
-      address: address.trim() || "Delhi NCR",
-      latitude: latitude ? parseFloat(latitude) : undefined,
-      longitude: longitude ? parseFloat(longitude) : undefined,
-      nearby_landmarks: landmarks,
-      road_connectivity: roadConnectivity,
-      price: parseFloat(price),
-      price_negotiable: priceNegotiable,
-      total_area: parseFloat(totalArea),
-      area_unit: areaUnit,
-      built_up_area: builtUpArea ? parseFloat(builtUpArea) : undefined,
-      road_width: roadWidth ? parseFloat(roadWidth) : undefined,
-      bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
-      bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
-      furnishing: furnishing as any,
-      ceiling_height: ceilingHeight ? parseFloat(ceilingHeight) : undefined,
-      power_availability: powerAvailability,
-      loading_facilities: loadingFacilities,
-      land_type: landType,
-      water_availability: waterAvailability,
-      road_access: roadAccess,
-      is_featured: isFeatured,
-      seo_title: seoTitle || `${title} | Land Parcel`,
-      seo_description: seoDescription || description.slice(0, 160),
-      video_url: videoUrl,
-      images,
-      documents,
-    });
+    setIsSubmitting(true);
+    const toastId = toast.loading(
+      targetStatus === "published" ? "Publishing property live..." : "Saving listing draft..."
+    );
 
-    if (targetStatus === "published") {
-      toast.success(`Property published live with ID: ${created.listing_id}`);
-    } else {
-      toast.success(`Property saved as Draft with ID: ${created.listing_id}`);
+    try {
+      const created = await addProperty({
+        title: title.trim(),
+        description: description.trim() || "Prime property listed by Land Parcel administrator.",
+        category,
+        property_type: propertyType,
+        status: targetStatus,
+        source: "admin", // Admin Added - permanently free & unlimited
+        availability_status: "available",
+        state,
+        city: city.trim() || "Delhi",
+        locality: locality.trim() || city,
+        address: address.trim() || "Delhi NCR",
+        latitude: latitude ? parseFloat(latitude) : undefined,
+        longitude: longitude ? parseFloat(longitude) : undefined,
+        nearby_landmarks: landmarks,
+        road_connectivity: roadConnectivity,
+        price: parseFloat(price),
+        price_negotiable: priceNegotiable,
+        total_area: parseFloat(totalArea),
+        area_unit: areaUnit,
+        built_up_area: builtUpArea ? parseFloat(builtUpArea) : undefined,
+        road_width: roadWidth ? parseFloat(roadWidth) : undefined,
+        bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+        bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
+        furnishing: furnishing as any,
+        ceiling_height: ceilingHeight ? parseFloat(ceilingHeight) : undefined,
+        power_availability: powerAvailability,
+        loading_facilities: loadingFacilities,
+        land_type: landType,
+        water_availability: waterAvailability,
+        road_access: roadAccess,
+        is_featured: isFeatured,
+        seo_title: seoTitle || `${title} | Land Parcel`,
+        seo_description: seoDescription || description.slice(0, 160),
+        video_url: videoUrl,
+        images,
+        documents,
+      });
+
+      if (targetStatus === "published") {
+        toast.success(`Property published live with ID: ${created.listing_id}!`, { id: toastId });
+      } else {
+        toast.success(`Property saved as Draft with ID: ${created.listing_id}!`, { id: toastId });
+      }
+
+      router.push("/admin/properties");
+    } catch (err: any) {
+      toast.error("Failed to save property: " + (err?.message || "Unknown error"), { id: toastId });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    router.push("/admin/properties");
   };
 
   return (
@@ -658,41 +754,57 @@ export default function AdminNewPropertyPage() {
             <span className="text-xs text-[#64748B]">Click star icon to designate cover photo</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {images.map((img) => (
-              <div key={img.id} className="relative h-28 rounded-xl overflow-hidden border border-[#E2E8F0] group">
-                <Image src={img.url} alt="Property Photo" fill className="object-cover" sizes="200px" />
-                {img.is_cover && (
-                  <span className="absolute bottom-1.5 left-1.5 bg-[#C6A66B] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
-                    Cover
-                  </span>
-                )}
-                <div className="absolute top-1.5 right-1.5 flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleSetCover(img.id)}
-                    className={`p-1 rounded text-white text-xs ${img.is_cover ? "bg-amber-500" : "bg-black/60 hover:bg-amber-500"}`}
-                    title="Set Cover"
-                  >
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(img.id)}
-                    className="p-1 rounded bg-red-600/80 text-white text-xs hover:bg-red-700"
-                    title="Remove Photo"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+          {/* Photo File Upload Box */}
+          <label className="border-2 border-dashed border-[#C6A66B]/50 hover:border-[#172B4D] rounded-xl p-5 text-center cursor-pointer bg-white transition-colors flex flex-col items-center justify-center gap-1.5 group">
+            <Upload className="w-7 h-7 text-[#C6A66B] group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-semibold text-[#172B4D]">Upload Real Photos from Device</span>
+            <span className="text-xs text-[#64748B]">Click to browse multiple property photos (JPG, PNG, WebP)</span>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {images.map((img) => (
+                <div key={img.id} className="relative h-28 rounded-xl overflow-hidden border border-[#E2E8F0] group">
+                  <Image src={img.url} alt="Property Photo" fill className="object-cover" sizes="200px" />
+                  {img.is_cover && (
+                    <span className="absolute bottom-1.5 left-1.5 bg-[#C6A66B] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                      Cover
+                    </span>
+                  )}
+                  <div className="absolute top-1.5 right-1.5 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSetCover(img.id)}
+                      className={`p-1 rounded text-white text-xs ${img.is_cover ? "bg-amber-500" : "bg-black/60 hover:bg-amber-500"}`}
+                      title="Set Cover"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(img.id)}
+                      className="p-1 rounded bg-red-600/80 text-white text-xs hover:bg-red-700"
+                      title="Remove Photo"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex gap-2">
             <input
               type="url"
-              placeholder="Paste direct photo URL..."
+              placeholder="Or paste direct image URL (CDN / Cloud Storage)..."
               value={imageUrlInput}
               onChange={(e) => setImageUrlInput(e.target.value)}
               className="input-field text-xs py-2 flex-1"
@@ -704,20 +816,6 @@ export default function AdminNewPropertyPage() {
             >
               + Add Image URL
             </button>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1 flex-wrap">
-            <span className="text-[11px] text-[#64748B]">Quick presets:</span>
-            {SAMPLE_PRESETS.map((p, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleAddImage(p)}
-                className="text-[11px] text-[#172B4D] bg-[#EAF3FA] hover:bg-[#172B4D] hover:text-white px-2 py-0.5 rounded transition-colors"
-              >
-                Sample {idx + 1}
-              </button>
-            ))}
           </div>
 
           <div>
@@ -773,30 +871,31 @@ export default function AdminNewPropertyPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="border border-dashed border-amber-400 hover:border-amber-600 rounded-xl p-3 bg-white cursor-pointer flex items-center justify-center gap-2 text-xs font-semibold text-[#172B4D] transition-colors shrink-0">
+              <Upload className="w-4 h-4 text-amber-600" />
+              <span>Browse File (PDF / DOC / Image)</span>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,image/*"
+                onChange={handleDocumentFileUpload}
+                className="hidden"
+              />
+            </label>
             <input
               type="text"
               placeholder="Document Title (e.g. Sale Deed, Khata Certificate)"
               value={docTitle}
               onChange={(e) => setDocTitle(e.target.value)}
-              className="input-field text-xs py-2 bg-white"
+              className="input-field text-xs py-2 bg-white flex-1"
             />
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Cloud Storage URL / Path..."
-                value={docUrl}
-                onChange={(e) => setDocUrl(e.target.value)}
-                className="input-field text-xs py-2 bg-white flex-1"
-              />
-              <button
-                type="button"
-                onClick={handleAddDocument}
-                className="btn-primary text-xs py-2 px-3 whitespace-nowrap"
-              >
-                + Attach Document
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleAddDocument}
+              className="btn-secondary text-xs py-2 px-3 bg-white whitespace-nowrap shrink-0"
+            >
+              + Add by URL
+            </button>
           </div>
         </div>
 

@@ -24,6 +24,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { usePropertyStore } from "@/lib/property-store";
+import { useSubscriptionStore } from "@/lib/subscription-store";
+import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { PropertyCategory, PropertyType, PropertyImage } from "@/types";
 
 const STATES = ["Delhi", "Haryana", "Uttar Pradesh", "Uttarakhand", "Rajasthan", "Punjab"];
@@ -159,6 +161,8 @@ export default function ListPropertyForm() {
   const [newImageUrl, setNewImageUrl] = useState("");
 
   const { addProperty } = usePropertyStore();
+  const { checkEligibility, activeClient, getOrCreateClient } = useSubscriptionStore();
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
   const {
     register,
@@ -169,13 +173,19 @@ export default function ListPropertyForm() {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      seller_type: "owner",
+      seller_name: activeClient?.name || "",
+      seller_mobile: activeClient?.mobile || "",
+      seller_email: activeClient?.email || "",
+      seller_type: activeClient?.role || "owner",
       area_unit: "sqft",
       consent: false,
       authorization_confirmed: false,
       loading_facilities: false,
     },
   });
+
+  const watchMobile = watch("seller_mobile") || activeClient?.mobile || "";
+  const eligibility = checkEligibility(watchMobile, "owner");
 
   const selectedCategory = (watch("category") as PropertyCategory) || "residential";
 
@@ -212,7 +222,24 @@ export default function ListPropertyForm() {
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
-    if (step === 1) fieldsToValidate = ["seller_name", "seller_mobile", "seller_type"];
+    if (step === 1) {
+      fieldsToValidate = ["seller_name", "seller_mobile", "seller_type"];
+      const isValid = await trigger(fieldsToValidate);
+      if (!isValid) return;
+
+      // Check quota eligibility before advancing past Step 1
+      if (!eligibility.eligible) {
+        toast.error("Free listing quota of 5 properties reached. Please subscribe to continue.");
+        setIsSubModalOpen(true);
+        return;
+      }
+
+      // Ensure client is registered in central client registry
+      getOrCreateClient(watch("seller_mobile"), watch("seller_name"), watch("seller_type"), watch("seller_email"));
+      setStep(2);
+      return;
+    }
+
     if (step === 2) fieldsToValidate = ["title", "category", "property_type", "state", "city", "locality", "address", "description"];
     if (step === 3) fieldsToValidate = ["total_area", "area_unit", "expected_price"];
 
@@ -221,6 +248,13 @@ export default function ListPropertyForm() {
   };
 
   const onSubmit = async (data: FormData) => {
+    // Final eligibility re-check
+    if (!eligibility.eligible) {
+      toast.error("Listing quota reached. An active subscription is required to submit.");
+      setIsSubModalOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 1. Submit through the central property store with status 'pending' (Pending Review)
@@ -385,9 +419,52 @@ export default function ListPropertyForm() {
         {/* Step 1: Seller / Contact Information */}
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
-            <h2 className="text-xl font-bold text-[#172B4D] font-display mb-3">
+            <h2 className="text-xl font-bold text-[#172B4D] font-display mb-1">
               Step 1: Ownership & Contact Details
             </h2>
+
+            {/* Quota & Monetization Live Status Banner */}
+            {eligibility.eligible ? (
+              <div className="p-3.5 bg-[#EAF3FA] border border-blue-200 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[#172B4D] font-semibold">
+                    {eligibility.subscriptionStatus === "active"
+                      ? `⭐ ${eligibility.reason}`
+                      : `Free Plan: ${eligibility.freeCreditsUsed} of 5 used (${eligibility.freeCreditsRemaining} credits remaining)`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSubModalOpen(true)}
+                  className="text-blue-700 hover:text-blue-900 font-bold underline text-[11px] flex-shrink-0"
+                >
+                  View Plans
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-900 space-y-2">
+                <div className="flex items-start gap-2.5 font-bold">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <span>Free Listing Limit Reached (5/5 Used)</span>
+                </div>
+                <p className="text-slate-700 text-xs pl-6 leading-relaxed">
+                  You have already used all 5 free property listing credits for mobile +91 {watchMobile}. An active monthly subscription is required before accepting additional listings.
+                </p>
+                <div className="pl-6 pt-1 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsSubModalOpen(true)}
+                    className="btn-primary text-xs py-1.5 px-3 bg-[#172B4D] hover:bg-[#1e3a6e]"
+                  >
+                    Upgrade / Renew Subscription
+                  </button>
+                  <Link href="/pricing" className="text-blue-700 font-bold hover:underline text-[11px]">
+                    See Plan Comparison
+                  </Link>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="label-field">Full Legal Name *</label>
@@ -792,6 +869,14 @@ export default function ListPropertyForm() {
           )}
         </div>
       </form>
+
+      {/* Subscription Modal for Upgrades */}
+      <SubscriptionModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        client={activeClient}
+        onSuccess={() => setIsSubModalOpen(false)}
+      />
     </div>
   );
 }

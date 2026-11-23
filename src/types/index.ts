@@ -321,3 +321,130 @@ export interface DashboardStats {
   site_visit_requests: number;
   recent_enquiries: Enquiry[];
 }
+
+// =============================================================================
+// PROPERTY LISTING MONETIZATION & SUBSCRIPTION TYPES
+// =============================================================================
+
+export type ClientRole = "owner" | "agent" | "developer";
+
+export type SubscriptionStatus = "none" | "active" | "expired" | "pending" | "cancelled";
+
+export type PaymentMethod =
+  | "offline_upi"
+  | "offline_bank_transfer"
+  | "offline_cash"
+  | "gateway_razorpay";
+
+export interface SubscriptionPlan {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  price: number; // in INR
+  billing_period: "monthly" | "quarterly";
+  validity_months: number; // 1 or 3
+  listing_credits: number; // 20 or 50
+  features: string[];
+  is_popular?: boolean;
+  is_active: boolean;
+}
+
+export interface ClientAccount {
+  id: string;
+  name: string;
+  mobile: string;
+  email?: string;
+  role: ClientRole;
+  company_name?: string;
+  rera_number?: string;
+  pan_number?: string;
+  
+  // Free Listing Plan (Lifetime - never resets monthly)
+  free_credits_total: number; // Standard: 5 free credits
+  free_credits_used: number;  // Only increments when listing is approved/published
+  
+  // Purchased Subscription Listing Credits (Separate from free credits)
+  paid_credits_total: number; // e.g. 20 for Monthly, 50 for Quarterly
+  paid_credits_used: number;  // Consumed when approved/published under active plan
+  
+  // Subscription status
+  subscription_status: SubscriptionStatus;
+  current_plan_id?: string;
+  current_plan_name?: string;
+  current_period_start?: string;
+  current_period_end?: string;
+  
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: string;
+  client_id: string;
+  client_name: string;
+  client_mobile: string;
+  plan_id: string;
+  plan_name: string;
+  amount: number;
+  billing_cycle: "monthly" | "quarterly";
+  validity_months: number;
+  listing_credits: number;
+  status: SubscriptionStatus;
+  start_date: string;
+  end_date: string;
+  payment_method: PaymentMethod;
+  payment_reference?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  transaction_id: string;
+  invoice_number?: string;
+  client_id: string;
+  client_name: string;
+  client_mobile: string;
+  client_email?: string;
+  subscription_id?: string;
+  plan_id: string;
+  plan_name: string;
+  amount: number;
+  status: "pending_verification" | "verified" | "rejected";
+  payment_method: PaymentMethod;
+  reference_number: string;
+  proof_notes?: string;
+  submitted_at: string;
+  verified_at?: string;
+  verified_by?: string;
+  admin_notes?: string;
+}
+
+export interface ListingEligibility {
+  eligible: boolean;
+  reason: string;
+  isUnlimited: boolean;
+  freeCreditsTotal: number;
+  freeCreditsUsed: number;
+  freeCreditsRemaining: number;
+  paidCreditsTotal: number;
+  paidCreditsUsed: number;
+  paidCreditsRemaining: number;
+  subscriptionStatus: SubscriptionStatus;
+  planName?: string;
+  expiryDate?: string;
+  requiresSubscription: boolean;
+  creditsExhausted: boolean;
+}
+
+export interface BusinessIdentity {
+  brand_name: string;
+  owner_name: string;
+  email: string;
+  whatsapp: string;
+  whatsapp_formatted: string;
+  tagline: string;
+  primary_market: string;
+}
