@@ -155,6 +155,19 @@ function AdminSidebarContent() {
         </div>
 
         <Link
+          href="/admin/customers"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors",
+            pathname === "/admin/customers"
+              ? "bg-white/15 text-white font-bold text-[#C6A66B]"
+              : "text-slate-300 hover:bg-white/10 hover:text-white"
+          )}
+        >
+          <Users className="w-3.5 h-3.5 text-slate-400" />
+          <span>Customer Accounts</span>
+        </Link>
+
+        <Link
           href="/admin/subscriptions"
           className={cn(
             "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors",
@@ -170,7 +183,7 @@ function AdminSidebarContent() {
                 pathname === "/admin/subscriptions" ? "text-[#C6A66B]" : "text-slate-400"
               )}
             />
-            <span>Customers, Roles &amp; Plans</span>
+            <span>Plans &amp; Payments</span>
           </div>
           {pendingPaymentsCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold bg-amber-400 text-[#172B4D] animate-pulse">

@@ -130,6 +130,8 @@ function normalizeCustomerRecord(c: any): ClientAccount {
     paid_credits_total: Number(c.paid_credits_total ?? 0),
     paid_credits_used: Number(c.paid_credits_used ?? 0),
     subscription_status: status,
+    status: (c.status || "active") as "active" | "suspended",
+    internal_notes: Array.isArray(c.internal_notes) ? c.internal_notes : [],
     current_plan_id: c.current_plan_id || undefined,
     current_plan_name: c.current_plan_name || undefined,
     current_period_start: c.current_period_start || undefined,
@@ -401,6 +403,8 @@ export class PlatformService {
           "role",
           "system_role",
           "company_name",
+          "status",
+          "internal_notes",
           "free_credits_total",
           "free_credits_used",
           "paid_credits_total",
@@ -1095,19 +1099,18 @@ export class PlatformService {
 
   static async updateEnquiry(
     id: string,
-    updates: { status?: Enquiry["status"]; addNote?: string; createdBy?: string }
-  ): Promise<(Enquiry & { notes_list?: string[] }) | null> {
+    updates: { status?: Enquiry["status"]; addNote?: string; createdBy?: string; follow_up_date?: string }
+  ): Promise<(Enquiry & { notes_list?: string[]; follow_up_date?: string }) | null> {
     if (isSupabaseConfigured()) {
       try {
         const { createAdminClient } = await import("@/lib/supabase/server");
         const supabase = await createAdminClient();
 
-        if (updates.status) {
-          await supabase
-            .from("enquiries")
-            .update({ status: updates.status, updated_at: new Date().toISOString() })
-            .eq("id", id);
-        }
+        const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+        if (updates.status) patch.status = updates.status;
+        if (updates.follow_up_date !== undefined) patch.follow_up_date = updates.follow_up_date;
+
+        await supabase.from("enquiries").update(patch).eq("id", id);
         if (updates.addNote) {
           await supabase.from("lead_notes").insert({
             enquiry_id: id,
@@ -1122,12 +1125,15 @@ export class PlatformService {
       }
     }
 
-    const list = readJsonFile<(Enquiry & { notes_list?: string[] })[]>(ENQUIRIES_FILE, []);
+    const list = readJsonFile<(Enquiry & { notes_list?: string[]; follow_up_date?: string })[]>(ENQUIRIES_FILE, []);
     const idx = list.findIndex((l) => l.id === id);
     if (idx === -1) return null;
 
     if (updates.status) {
       list[idx].status = updates.status;
+    }
+    if (updates.follow_up_date !== undefined) {
+      list[idx].follow_up_date = updates.follow_up_date;
     }
     if (updates.addNote) {
       list[idx].notes_list = [...(list[idx].notes_list || []), updates.addNote];

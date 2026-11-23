@@ -6,7 +6,11 @@ export type PropertyCategory =
   | "industrial"
   | "agricultural"
   | "institutional"
-  | "large-land";
+  | "large-land"
+  | "plots-land"
+  | "warehouses"
+  | "shops-offices"
+  | (string & {});
 
 export type PropertyType =
   // Residential
@@ -70,7 +74,7 @@ export type AreaUnit = "sqft" | "sqm" | "sqyd" | "acre" | "bigha" | "kanal" | "m
 
 export type FurnishingStatus = "furnished" | "semi-furnished" | "unfurnished";
 
-export type AvailabilityStatus = "ready-to-move" | "under-construction" | "available" | "sold";
+export type AvailabilityStatus = "ready-to-move" | "under-construction" | "available" | "sold" | "rented" | "under-negotiation";
 
 export interface PropertyDocument {
   id: string;
@@ -239,7 +243,9 @@ export interface Enquiry {
   preferred_contact_time?: string;
   
   // Status tracking
-  status: "new" | "contacted" | "interested" | "site-visit-scheduled" | "negotiation" | "converted" | "closed" | "not-interested";
+  status: "new" | "contacted" | "interested" | "follow-up" | "site-visit-scheduled" | "negotiation" | "converted" | "closed" | "not-interested";
+  follow_up_date?: string;
+  notes_list?: string[];
   
   // Meta
   source: string;
@@ -380,6 +386,8 @@ export interface ClientAccount {
   
   // Subscription status
   subscription_status: SubscriptionStatus;
+  status?: "active" | "suspended";
+  internal_notes?: string[];
   current_plan_id?: string;
   current_plan_name?: string;
   current_period_start?: string;
@@ -458,3 +466,34 @@ export interface BusinessIdentity {
   tagline: string;
   primary_market: string;
 }
+
+export interface SiteCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  is_active: boolean;
+  sort_order?: number;
+}
+
+export interface SiteSettings {
+  brand_name: string;
+  owner_name: string;
+  official_email: string;
+  whatsapp_number: string;
+  primary_market: string;
+  office_address: string;
+  tagline: string;
+  seo_title: string;
+  seo_description: string;
+  seo_keywords: string;
+  hero_headline: string;
+  hero_subheadline: string;
+  hero_banner_image?: string;
+  about_us_headline: string;
+  about_us_content: string;
+  footer_text: string;
+  categories: SiteCategory[];
+  updated_at: string;
+}
+

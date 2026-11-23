@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, status, addNote } = body;
+    const { id, status, addNote, follow_up_date } = body;
     if (!id) {
       return NextResponse.json({ error: "Lead ID is required." }, { status: 400 });
     }
@@ -33,6 +33,7 @@ export async function PATCH(request: NextRequest) {
     const updated = await PlatformService.updateEnquiry(id, {
       status,
       addNote,
+      follow_up_date,
       createdBy: admin.name,
     });
 

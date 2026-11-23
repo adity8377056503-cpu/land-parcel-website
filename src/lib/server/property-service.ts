@@ -500,4 +500,42 @@ export class PropertyService {
 
     return true;
   }
+
+  /**
+   * Duplicates an existing property as a new Draft listing.
+   */
+  static async duplicateProperty(
+    id: string,
+    author: string = OFFICIAL_BUSINESS.email
+  ): Promise<Property | null> {
+    const property = await this.getPropertyByIdOrSlug(id);
+    if (!property) return null;
+
+    const copyTitle = `Copy of ${property.title}`;
+    const duplicated = await this.createProperty(
+      {
+        ...property,
+        title: copyTitle,
+        status: "draft",
+        source: "admin",
+        is_featured: false,
+        view_count: 0,
+        images: property.images?.map((img) => ({
+          ...img,
+          id: generateId(),
+          property_id: "",
+          created_at: new Date().toISOString(),
+        })),
+        documents: property.documents?.map((doc) => ({
+          ...doc,
+          id: generateId(),
+          property_id: "",
+          created_at: new Date().toISOString(),
+        })),
+      },
+      author
+    );
+
+    return duplicated;
+  }
 }

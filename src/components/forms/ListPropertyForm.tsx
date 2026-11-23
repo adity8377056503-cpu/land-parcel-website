@@ -36,11 +36,14 @@ const CATEGORIES: { label: string; value: PropertyCategory }[] = [
   { label: "Commercial", value: "commercial" },
   { label: "Industrial", value: "industrial" },
   { label: "Agricultural", value: "agricultural" },
+  { label: "Plots and Land", value: "plots-land" },
+  { label: "Warehouses", value: "warehouses" },
+  { label: "Shops and Offices", value: "shops-offices" },
   { label: "Institutional", value: "institutional" },
   { label: "Large Land Parcel", value: "large-land" },
 ];
 
-const PROPERTY_TYPES: Record<PropertyCategory, { label: string; value: PropertyType }[]> = {
+const PROPERTY_TYPES: Record<string, { label: string; value: PropertyType }[]> = {
   residential: [
     { label: "Independent House", value: "independent-house" },
     { label: "Builder Floor", value: "builder-floor" },
@@ -70,6 +73,26 @@ const PROPERTY_TYPES: Record<PropertyCategory, { label: string; value: PropertyT
     { label: "Farmhouse", value: "farmhouse" },
     { label: "Farm Land", value: "farm-land" },
     { label: "Orchard", value: "orchard" },
+  ],
+  "plots-land": [
+    { label: "Residential Plot", value: "residential-plot" },
+    { label: "Commercial Land", value: "commercial-land" },
+    { label: "Industrial Plot", value: "industrial-plot" },
+    { label: "Investment Land", value: "investment-land" },
+    { label: "Development Land", value: "development-land" },
+  ],
+  warehouses: [
+    { label: "Warehouse", value: "warehouse" },
+    { label: "Logistics Facility", value: "logistics-facility" },
+    { label: "Industrial Building", value: "industrial-building" },
+    { label: "Manufacturing Unit", value: "manufacturing-unit" },
+  ],
+  "shops-offices": [
+    { label: "Commercial Shop", value: "commercial-shop" },
+    { label: "Office Space", value: "office-space" },
+    { label: "Showroom", value: "showroom" },
+    { label: "Retail Space", value: "retail-space" },
+    { label: "SCO Plot", value: "sco-plot" },
   ],
   institutional: [
     { label: "School", value: "school" },

@@ -283,6 +283,26 @@ export function usePropertyStore() {
     setProperties(updated);
   };
 
+  const duplicateProperty = async (id: string): Promise<Property | null> => {
+    try {
+      const res = await fetch(`/api/properties/${id}/duplicate`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.property) {
+          const updated = [json.property, ...properties];
+          saveStoredProperties(updated);
+          setProperties(updated);
+          return json.property;
+        }
+      }
+    } catch (err) {
+      console.error("duplicateProperty error:", err);
+    }
+    return null;
+  };
+
   // Filtered views
   const allProperties = properties;
   const myUploaded = properties.filter((p) => p.source === "admin");
@@ -311,6 +331,7 @@ export function usePropertyStore() {
     updateProperty,
     updateStatus,
     deleteProperty,
+    duplicateProperty,
     allProperties,
     myUploaded,
     clientSubmissions,

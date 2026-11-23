@@ -379,6 +379,24 @@ CREATE TABLE IF NOT EXISTS public.property_audit_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Admin Global Audit Log
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    action TEXT NOT NULL,
+    performed_by TEXT NOT NULL,
+    target_entity TEXT NOT NULL,
+    target_id TEXT,
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Site Settings & Content
+CREATE TABLE IF NOT EXISTS public.site_settings (
+    id TEXT PRIMARY KEY DEFAULT 'current',
+    settings JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- ==============================================================================
 -- 8. ENQUIRIES, LEAD NOTES, SAVED PROPERTIES & ADMIN SETTINGS
 -- ==============================================================================
@@ -499,6 +517,12 @@ CREATE POLICY "Admin full access videos" ON public.property_videos FOR ALL USING
 -- Confidential Property Documents: Strictly Admin Only
 CREATE POLICY "Admin full access documents" ON public.property_documents FOR ALL USING (public.is_verified_admin());
 CREATE POLICY "Admin full access audit logs" ON public.property_audit_logs FOR ALL USING (public.is_verified_admin());
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admin full access global audit logs" ON public.admin_audit_logs FOR ALL USING (public.is_verified_admin());
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public views site settings" ON public.site_settings FOR SELECT USING (true);
+CREATE POLICY "Super Admin manages site settings" ON public.site_settings FOR ALL USING (public.is_super_admin());
 
 -- Enquiries & Lead Notes
 CREATE POLICY "Public submits enquiries" ON public.enquiries FOR INSERT WITH CHECK (true);

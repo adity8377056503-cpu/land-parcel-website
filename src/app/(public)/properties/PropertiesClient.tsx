@@ -15,6 +15,9 @@ const CATEGORIES = [
   { label: "Commercial", value: "commercial" },
   { label: "Industrial", value: "industrial" },
   { label: "Agricultural", value: "agricultural" },
+  { label: "Plots and Land", value: "plots-land" },
+  { label: "Warehouses", value: "warehouses" },
+  { label: "Shops and Offices", value: "shops-offices" },
   { label: "Institutional", value: "institutional" },
   { label: "Large Land Parcels", value: "large-land" },
 ];

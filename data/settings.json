@@ -1,0 +1,85 @@
+{
+  "brand_name": "Land Parcel",
+  "owner_name": "Suraj Prakash",
+  "official_email": "acreindiaclub@gmail.com",
+  "whatsapp_number": "8750442235",
+  "primary_market": "Delhi NCR, India",
+  "office_address": "Connaught Place / Barakhamba Road, New Delhi, Delhi 110001",
+  "tagline": "Your Trusted Partner in Premium Property Deals",
+  "seo_title": "Land Parcel — Premium Commercial, Residential & Industrial Real Estate in Delhi NCR",
+  "seo_description": "Direct and verified real estate marketplace in Delhi NCR for residential, commercial, industrial, agricultural land, plots, warehouses, and institutional properties.",
+  "seo_keywords": "delhi ncr real estate, commercial land, industrial plot, agricultural land, warehouses, land parcel, buy property delhi",
+  "hero_headline": "Discover Prime Real Estate & Verified Land Parcels in Delhi NCR",
+  "hero_subheadline": "Connect directly with genuine property owners, builders, and institutional investors. Zero fake listings, 100% verified documentation.",
+  "hero_banner_image": "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1600&auto=format&fit=crop",
+  "about_us_headline": "Connecting Serious Investors with Prime Land & Properties",
+  "about_us_content": "Land Parcel is Delhi NCR's premier real estate marketplace dedicated to institutional, commercial, industrial, and luxury residential properties. Guided by transparent diligence and genuine property ownership, we empower buyers and sellers to transact with uncompromised integrity.",
+  "footer_text": "© 2026 Land Parcel. All rights reserved. A verified marketplace powered by Acre India Club.",
+  "categories": [
+    {
+      "id": "cat-residential",
+      "name": "Residential Properties",
+      "slug": "residential",
+      "description": "Apartments, builder floors, independent houses, villas and residential plots across Delhi NCR.",
+      "is_active": true,
+      "sort_order": 1
+    },
+    {
+      "id": "cat-commercial",
+      "name": "Commercial Properties",
+      "slug": "commercial",
+      "description": "Office spaces, commercial buildings, SCO plots, and retail showrooms.",
+      "is_active": true,
+      "sort_order": 2
+    },
+    {
+      "id": "cat-industrial",
+      "name": "Industrial Properties",
+      "slug": "industrial",
+      "description": "Industrial plots, factories, manufacturing units, and logistics hubs.",
+      "is_active": true,
+      "sort_order": 3
+    },
+    {
+      "id": "cat-agricultural",
+      "name": "Agricultural Land",
+      "slug": "agricultural",
+      "description": "Fertile agricultural land, farmhouses, and expansive rural farm lands.",
+      "is_active": true,
+      "sort_order": 4
+    },
+    {
+      "id": "cat-plots-land",
+      "name": "Plots and Land",
+      "slug": "plots-land",
+      "description": "Freehold plots, commercial land parcels, and strategic investment land.",
+      "is_active": true,
+      "sort_order": 5
+    },
+    {
+      "id": "cat-warehouses",
+      "name": "Warehouses",
+      "slug": "warehouses",
+      "description": "Ready-to-use and build-to-suit warehouses with high ceilings and heavy vehicle access.",
+      "is_active": true,
+      "sort_order": 6
+    },
+    {
+      "id": "cat-shops-offices",
+      "name": "Shops and Offices",
+      "slug": "shops-offices",
+      "description": "High-street retail shops and grade-A corporate offices in prime business districts.",
+      "is_active": true,
+      "sort_order": 7
+    },
+    {
+      "id": "cat-institutional",
+      "name": "Institutional Properties",
+      "slug": "institutional",
+      "description": "Schools, hospitals, colleges, healthcare centres, and educational campus lands.",
+      "is_active": true,
+      "sort_order": 8
+    }
+  ],
+  "updated_at": "2026-11-23T16:35:45.481Z"
+}

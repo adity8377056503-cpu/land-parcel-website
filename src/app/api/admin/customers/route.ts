@@ -112,6 +112,45 @@ export async function PATCH(request: NextRequest) {
         });
       }
 
+      case "suspend_customer": {
+        const updated = await PlatformService.updateCustomer(customerId, {
+          status: "suspended",
+        });
+        return NextResponse.json({
+          success: true,
+          message: `Account for ${existing.name} has been suspended.`,
+          customer: updated,
+        });
+      }
+
+      case "reactivate_customer": {
+        const updated = await PlatformService.updateCustomer(customerId, {
+          status: "active",
+        });
+        return NextResponse.json({
+          success: true,
+          message: `Account for ${existing.name} has been reactivated.`,
+          customer: updated,
+        });
+      }
+
+      case "add_internal_note": {
+        const note = (body.note as string)?.trim();
+        if (!note) {
+          return NextResponse.json({ error: "Note content cannot be empty." }, { status: 400 });
+        }
+        const formattedNote = `[${new Date().toISOString().slice(0, 10)} - ${admin.name}]: ${note}`;
+        const existingNotes = existing.internal_notes || [];
+        const updated = await PlatformService.updateCustomer(customerId, {
+          internal_notes: [formattedNote, ...existingNotes],
+        });
+        return NextResponse.json({
+          success: true,
+          message: "Internal note saved successfully.",
+          customer: updated,
+        });
+      }
+
       default:
         return NextResponse.json({ error: "Unknown action." }, { status: 400 });
     }
