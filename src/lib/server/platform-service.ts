@@ -790,13 +790,8 @@ export class PlatformService {
       admin_notes: adminNotes || `Payment verified and activated by ${verifiedBy}`,
     };
 
-    // Carry over unused active paid credits if renewing early; otherwise reset paid pool to newly purchased credits
-    const existingActiveRemaining =
-      customer.subscription_status === "active" &&
-      customer.current_period_end &&
-      new Date(customer.current_period_end) > now
-        ? Math.max(0, customer.paid_credits_total - customer.paid_credits_used)
-        : 0;
+    // Carry over any unused paid credits (from manual grant or previous plan) + add newly purchased credits
+    const existingActiveRemaining = Math.max(0, (customer.paid_credits_total || 0) - (customer.paid_credits_used || 0));
 
     if (isSupabaseConfigured()) {
       try {
