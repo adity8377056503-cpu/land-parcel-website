@@ -194,7 +194,7 @@ export default function CustomerDashboardPage() {
   // Unauthenticated -> Show real Mobile OTP Login / Registration
   if (!authCustomer || !dashboardData) {
     return (
-      <div className="min-h-screen bg-[#F5F7FA] pt-28 pb-20 px-4">
+      <div className="min-h-screen bg-[#F5F7FA] py-12 px-4">
         <div className="container-custom max-w-lg mx-auto">
           <CustomerOtpAuthCard
             title="Customer Dashboard Login"
@@ -218,7 +218,7 @@ export default function CustomerDashboardPage() {
   const isPendingVerification = eligibility.subscriptionStatus === "pending";
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] pt-24 pb-16">
+    <div className="min-h-screen bg-[#F5F7FA] py-8 pb-16">
       <div className="container-custom">
         {/* Customer Profile Header */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#E2E8F0] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

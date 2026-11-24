@@ -1,13 +1,25 @@
 import Link from "next/link";
-import { Building2, Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
+import {
+  Building2,
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube,
+  Shield,
+  Sparkles,
+} from "lucide-react";
 import { OFFICIAL_BUSINESS, getWhatsAppUrl } from "@/lib/utils";
 
-const FOOTER_LINKS = {
-  "Quick Links": [
-    { label: "Home", href: "/" },
-    { label: "Buy Property", href: "/buy" },
-    { label: "Sell Property", href: "/list-property" },
-    { label: "About Us", href: "/about" },
+const FOOTER_SECTIONS = {
+  "Marketplace": [
+    { label: "All Properties", href: "/properties" },
+    { label: "Subscription Plans & Pricing", href: "/pricing" },
+    { label: "List a Property", href: "/list-property" },
+    { label: "About Land Parcel", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ],
   "Property Types": [
@@ -15,8 +27,16 @@ const FOOTER_LINKS = {
     { label: "Commercial Properties", href: "/commercial" },
     { label: "Industrial Properties", href: "/industrial" },
     { label: "Agricultural Land", href: "/agricultural" },
+    { label: "Plots & Land", href: "/properties?category=plots-land" },
     { label: "Warehouses", href: "/properties?type=warehouse" },
-    { label: "Large Land Parcels", href: "/properties?category=large-land" },
+    { label: "Shops & Offices", href: "/properties?category=shops-offices" },
+    { label: "Institutional", href: "/properties?category=institutional" },
+  ],
+  "Portals & Accounts": [
+    { label: "Customer Login / Register", href: "/login" },
+    { label: "Customer Dashboard", href: "/dashboard" },
+    { label: "Super Admin Dashboard", href: "/admin" },
+    { label: "Super Admin Login", href: "/admin/login" },
   ],
   "Key Locations": [
     { label: "Properties in Dwarka", href: "/locations/dwarka" },
@@ -25,11 +45,6 @@ const FOOTER_LINKS = {
     { label: "Properties in West Delhi", href: "/locations/west-delhi" },
     { label: "Properties in Noida", href: "/locations/noida" },
     { label: "Properties in Faridabad", href: "/locations/faridabad" },
-  ],
-  "Legal": [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms & Conditions", href: "/terms" },
-    { label: "Disclaimer", href: "/disclaimer" },
   ],
 };
 
@@ -42,25 +57,30 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-[#C6A66B] rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-[#C6A66B] rounded-xl flex items-center justify-center shadow-xs">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
                 <span className="text-xl font-bold font-display tracking-tight">LAND</span>
-                <span className="text-xl font-bold font-display tracking-tight text-[#C6A66B] ml-1">PARCEL</span>
+                <span className="text-xl font-bold font-display tracking-tight text-[#C6A66B] ml-1">
+                  PARCEL
+                </span>
               </div>
             </Link>
             <p className="text-slate-300 text-sm leading-relaxed mb-5">
-              {OFFICIAL_BUSINESS.tagline}. Connecting buyers,
-              sellers, investors and businesses across {OFFICIAL_BUSINESS.primary_market}.
+              {OFFICIAL_BUSINESS.tagline}. Connecting verified buyers, sellers, investors, builders, and developers across {OFFICIAL_BUSINESS.primary_market}. Zero fake listings, 100% verified documentation.
             </p>
+
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-sm text-slate-300">
                 <MapPin className="w-4 h-4 text-[#C6A66B] flex-shrink-0" />
                 <span>{OFFICIAL_BUSINESS.primary_market}</span>
               </div>
               <a
-                href={getWhatsAppUrl(OFFICIAL_BUSINESS.whatsapp_link_number, "Hi, I'd like to get in touch with Land Parcel.")}
+                href={getWhatsAppUrl(
+                  OFFICIAL_BUSINESS.whatsapp_link_number,
+                  "Hi, I'd like to get in touch with Land Parcel."
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
@@ -76,8 +96,9 @@ export default function Footer() {
                 <span>{OFFICIAL_BUSINESS.email}</span>
               </a>
             </div>
+
             {/* Social Links */}
-            <div className="flex items-center gap-3 mt-5">
+            <div className="flex items-center gap-3 mt-6">
               {[
                 { icon: Facebook, href: "#", label: "Facebook" },
                 { icon: Instagram, href: "#", label: "Instagram" },
@@ -97,18 +118,20 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link Columns */}
-          {Object.entries(FOOTER_LINKS).map(([heading, links]) => (
+          {/* Dynamic Link Columns */}
+          {Object.entries(FOOTER_SECTIONS).map(([heading, links]) => (
             <div key={heading}>
-              <h3 className="font-semibold text-sm text-[#C6A66B] uppercase tracking-wider mb-4">
-                {heading}
+              <h3 className="font-semibold text-xs text-[#C6A66B] uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                {heading === "Portals & Accounts" && <Shield className="w-3.5 h-3.5" />}
+                {heading === "Marketplace" && <Sparkles className="w-3.5 h-3.5" />}
+                <span>{heading}</span>
               </h3>
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-300 hover:text-white transition-colors"
+                      className="text-xs text-slate-300 hover:text-white transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -124,11 +147,21 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container-custom py-5 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-slate-400 text-xs">
-            © {new Date().getFullYear()} Land Parcel · Business Owner: {OFFICIAL_BUSINESS.owner_name}. All rights reserved.
+            © {new Date().getFullYear()} Land Parcel · Website Owner: {OFFICIAL_BUSINESS.owner_name}. Super Admin: Aditya Raj. All rights reserved.
           </p>
-          <p className="text-slate-400 text-xs">
-            Premium real estate platform serving Delhi NCR. Verified deals &amp; authentic documentation.
-          </p>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Terms &amp; Conditions
+            </Link>
+            <span>·</span>
+            <Link href="/disclaimer" className="hover:text-white transition-colors">
+              Disclaimer
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

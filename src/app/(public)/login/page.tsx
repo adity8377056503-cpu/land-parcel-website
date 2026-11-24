@@ -18,7 +18,7 @@ export default function CustomerLoginPage() {
   }, [isLoaded, isAuthenticated, router]);
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] pt-28 pb-20 px-4">
+    <div className="min-h-screen bg-[#F5F7FA] py-12 px-4">
       <div className="container-custom max-w-lg mx-auto space-y-6">
         <CustomerOtpAuthCard
           onSuccess={() => {
