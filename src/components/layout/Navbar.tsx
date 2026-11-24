@@ -62,7 +62,7 @@ export default function Navbar() {
             <span className="sm:hidden font-medium text-white">Land Parcel Marketplace</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <a
               href={whatsappUrl}
               target="_blank"
@@ -73,6 +73,27 @@ export default function Navbar() {
               <span className="hidden md:inline">WhatsApp Support:</span>
               <span className="font-semibold">{OFFICIAL_BUSINESS.whatsapp_formatted}</span>
             </a>
+
+            <span className="text-white/20">|</span>
+
+            {/* Customer Portal Top Link */}
+            {isAuthenticated && customer ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1 text-slate-200 hover:text-white transition-colors"
+              >
+                <User className="w-3 h-3 text-[#C6A66B]" />
+                <span className="hidden sm:inline">My Account</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1 text-slate-200 hover:text-white transition-colors"
+              >
+                <LogIn className="w-3 h-3 text-[#C6A66B]" />
+                <span>Customer Login</span>
+              </Link>
+            )}
 
             <span className="text-white/20">|</span>
 
@@ -99,8 +120,11 @@ export default function Navbar() {
       >
         <div className="container-custom">
           <div className="flex items-center justify-between h-16 md:h-18">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
+            {/* Logo with distinct margin to create a comfortable gap */}
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 group mr-8 xl:mr-12 flex-shrink-0"
+            >
               <div className="w-9 h-9 bg-[#172B4D] rounded-xl flex items-center justify-center group-hover:bg-[#1e3a6e] transition-colors shadow-xs">
                 <Building2 className="w-5 h-5 text-[#C6A66B]" />
               </div>
@@ -114,8 +138,8 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
+            {/* Desktop Navigation Links with generous gap */}
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 mr-auto">
               <Link
                 href="/"
                 className={cn(
@@ -204,52 +228,55 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* Desktop CTA & Customer Account Buttons */}
-            <div className="hidden lg:flex items-center gap-3">
+            {/* Header Actions — Visible on BOTH Desktop and Mobile */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Prominent Login / Sign In / Dashboard Portal Button */}
               {isAuthenticated && customer ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 text-xs font-bold text-[#172B4D] bg-[#EAF3FA] hover:bg-[#dbebf7] px-3.5 py-2 rounded-xl transition-colors border border-blue-200"
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#172B4D] bg-[#EAF3FA] hover:bg-[#dbebf7] px-3 py-2 rounded-xl border border-blue-200 transition-colors shadow-xs"
                   >
                     <User className="w-3.5 h-3.5 text-[#C6A66B]" />
-                    <span>{customer.name.split(" ")[0]} (Dashboard)</span>
+                    <span className="hidden sm:inline">{customer.name.split(" ")[0]}</span>
+                    <span>Dashboard</span>
                   </Link>
 
                   <button
                     onClick={() => logout()}
                     title="Sign Out"
-                    className="p-2 text-[#64748B] hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    className="p-2 text-[#64748B] hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors hidden sm:block"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center gap-1.5 text-xs font-bold text-[#172B4D] hover:text-[#C6A66B] px-3.5 py-2 rounded-xl hover:bg-[#EAF3FA] transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#172B4D] bg-[#F1F5F9] hover:bg-[#E2E8F0] px-3 sm:px-3.5 py-2 rounded-xl border border-slate-300 transition-colors shadow-xs"
                 >
-                  <LogIn className="w-4 h-4 text-[#C6A66B]" />
-                  <span>Customer Login</span>
+                  <LogIn className="w-3.5 h-3.5 text-[#C6A66B]" />
+                  <span>Login / Sign In</span>
                 </Link>
               )}
 
+              {/* List Property Primary CTA */}
               <Link
                 href="/list-property"
-                className="btn-primary text-xs font-bold py-2.5 px-4.5 rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5"
+                className="btn-primary text-xs font-bold py-2 px-3 sm:px-4 rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1 whitespace-nowrap"
               >
-                <span>List Property</span>
+                <span>+ List Property</span>
               </Link>
-            </div>
 
-            {/* Mobile Menu Toggle Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172B4D] hover:bg-[#EAF3FA] transition-colors"
-              aria-label="Toggle mobile menu"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+              {/* Mobile Menu Hamburger Button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172B4D] hover:bg-[#EAF3FA] transition-colors"
+                aria-label="Toggle mobile menu"
+              >
+                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -258,6 +285,55 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t border-[#E2E8F0] shadow-2xl max-h-[calc(100vh-5rem)] overflow-y-auto animate-fade-in">
           <div className="container-custom py-5 space-y-4">
+            {/* Prominent Account / Login Banner in Mobile Menu */}
+            <div className="bg-[#F8FAFC] rounded-2xl p-3.5 border border-[#E2E8F0] flex items-center justify-between">
+              {isAuthenticated && customer ? (
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#172B4D] text-[#C6A66B] flex items-center justify-center font-bold text-xs">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[#172B4D]">{customer.name}</p>
+                      <p className="text-[10px] text-[#64748B]">{customer.mobile}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="btn-secondary text-[11px] py-1.5 px-2.5"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="p-1.5 text-red-600 bg-red-50 rounded-lg text-xs"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <p className="text-xs font-bold text-[#172B4D]">Customer Account</p>
+                    <p className="text-[10px] text-[#64748B]">Sign in to manage listings &amp; credits</p>
+                  </div>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="btn-secondary text-xs py-1.5 px-3 font-bold"
+                  >
+                    Login / Register
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Quick Links */}
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] px-3">
@@ -289,7 +365,21 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-3 py-2 text-sm font-semibold text-[#172B4D] hover:bg-[#EAF3FA] rounded-xl"
               >
-                List a Property
+                List a Property Free
+              </Link>
+              <Link
+                href="/about"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-2 text-sm font-semibold text-[#172B4D] hover:bg-[#EAF3FA] rounded-xl"
+              >
+                About Us
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-2 text-sm font-semibold text-[#172B4D] hover:bg-[#EAF3FA] rounded-xl"
+              >
+                Contact Us
               </Link>
             </div>
 
@@ -312,52 +402,15 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Portals & Actions */}
-            <div className="space-y-2 pt-3 border-t border-[#E2E8F0]">
-              {isAuthenticated && customer ? (
-                <div className="flex gap-2">
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="btn-secondary text-xs py-2.5 px-3 flex-1 text-center"
-                  >
-                    Dashboard ({customer.name.split(" ")[0]})
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="px-3 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-bold"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="btn-secondary text-xs py-2.5 px-4 block text-center"
-                >
-                  Customer Login / Register
-                </Link>
-              )}
-
-              <Link
-                href="/list-property"
-                onClick={() => setIsMenuOpen(false)}
-                className="btn-primary text-xs py-2.5 px-4 block text-center"
-              >
-                List Your Property Free
-              </Link>
-
+            {/* Administration Link */}
+            <div className="pt-2 border-t border-[#E2E8F0]">
               <Link
                 href="/admin"
                 onClick={() => setIsMenuOpen(false)}
                 className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-[#172B4D] bg-[#EAF3FA] hover:bg-[#dbebf7] flex items-center justify-center gap-1.5 border border-blue-200"
               >
                 <Shield className="w-3.5 h-3.5 text-[#C6A66B]" />
-                <span>Super Admin Portal</span>
+                <span>Super Admin Portal (Aditya Raj)</span>
               </Link>
             </div>
           </div>
