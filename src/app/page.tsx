@@ -9,6 +9,7 @@ import FeaturedProperties from "@/components/home/FeaturedProperties";
 import ExploreLocations from "@/components/home/ExploreLocations";
 import WhyLandParcel from "@/components/home/WhyLandParcel";
 import SellCTA from "@/components/home/SellCTA";
+import HomePricingSection from "@/components/home/HomePricingSection";
 import InvestmentOpportunities from "@/components/home/InvestmentOpportunities";
 import FinalCTA from "@/components/home/FinalCTA";
 import { generateSEO } from "@/lib/seo";
@@ -27,7 +28,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-[85vh] flex items-center pt-16">
+        <section className="relative min-h-[85vh] flex items-center pt-24">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
             <Image
@@ -114,6 +115,9 @@ export default function HomePage() {
 
         {/* Sell Property CTA */}
         <SellCTA />
+
+        {/* Customer Listing Subscription Plans */}
+        <HomePricingSection />
 
         {/* Investment Opportunities */}
         <InvestmentOpportunities />
